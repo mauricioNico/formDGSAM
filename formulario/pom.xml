@@ -20,6 +20,13 @@
       <version>3.5.4</version>
     </dependency>
 
+    <!-- FlatLaf Extras (componentes adicionales como DatePicker) -->
+    <dependency>
+      <groupId>com.toedter</groupId>
+      <artifactId>jcalendar</artifactId>
+      <version>1.4</version>
+    </dependency>
+
     <!-- Apache POI (Excel .xlsx) -->
     <dependency>
       <groupId>org.apache.poi</groupId>
@@ -32,6 +39,14 @@
       <groupId>com.google.code.gson</groupId>
       <artifactId>gson</artifactId>
       <version>2.11.0</version>
+    </dependency>
+
+    <!-- Log4j core to provide logging implementation (silences StatusLogger error) -->
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-core</artifactId>
+      <version>2.21.1</version>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
 

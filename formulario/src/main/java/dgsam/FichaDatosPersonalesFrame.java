@@ -1,29 +1,53 @@
 package dgsam;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
+//import com.google.gson.Gson;
+//import com.google.gson.JsonObject;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import javax.swing.text.DateFormatter;
-import javax.swing.text.DefaultFormatterFactory;
-
-import java.awt.*;
+/*import javax.swing.text.DateFormatter;
+import javax.swing.text.DefaultFormatterFactory;*/
+import java.awt.BorderLayout;
+import java.awt.Color;
+//import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Image;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.io.*;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.awt.image.BufferedImage;
+import java.io.BufferedReader;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+/*import java.net.HttpURLConnection;
+import java.net.URL;*/
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+//import java.util.Calendar;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Supplier;
+
+import com.toedter.calendar.JDateChooser;
 
 public class FichaDatosPersonalesFrame extends JFrame {
 
@@ -47,16 +71,16 @@ public class FichaDatosPersonalesFrame extends JFrame {
     private JTextField txtCP;
     private JComboBox<String> cmbProvincia;
 
-    // Datos personales (FECHAS: SPINNER)
-    private JSpinner spFechaIngreso;
+    // Datos personales (FECHAS: PICKER)
+    private JDateChooser spFechaIngreso;
     private JTextField txtAniosEnGrado;
     private JTextField txtAniosEnEspecialidad;
     private JComboBox<String> cmbSeDesempena;
     private JComboBox<String> cmbCumpleTurno;
     private JTextField txtFuncion;
     private JTextField txtPromedioTurnos;
-    private JSpinner spAptitudPsicofisicaFecha;
-    private JSpinner spFechaCondicionTiro;
+    private JDateChooser spAptitudPsicofisicaFecha;
+    private JDateChooser spFechaCondicionTiro;
     private JComboBox<String> cmbPoseeAptoFisico;
 
     private JComboBox<String> cmbEspBasica;
@@ -64,10 +88,10 @@ public class FichaDatosPersonalesFrame extends JFrame {
     private JComboBox<String> cmbEscalafon;
 
     private JTextField txtEmailInst;
-    private JSpinner spFechaNacimiento;
+    private JDateChooser spFechaNacimiento;
     private JTextField txtUsuarioGDE;
     private JTextField txtRTI;
-    private JTextField txtFactorSanguineo;
+    private JComboBox<String> cmbFactorSanguineo;
     private JComboBox<String> cmbUnidadRevista;
     private JTextField txtDestinoInterno;
     private JTextField txtCargo;
@@ -77,22 +101,22 @@ public class FichaDatosPersonalesFrame extends JFrame {
     // Idiomas
     private JTextField txtIdioma1;
     private JTextField txtNivelIdioma1;
-    private JSpinner spFechaNivel1;
+    private JDateChooser spFechaNivel1;
     private JTextField txtIdioma2;
     private JTextField txtNivelIdioma2;
-    private JSpinner spFechaNivel2;
+    private JDateChooser spFechaNivel2;
     private JTextField txtIdioma3;
     private JTextField txtNivelIdioma3;
-    private JSpinner spFechaNivel3;
+    private JDateChooser spFechaNivel3;
     private JComboBox<String> cmbRindioSidiel;
 
     // Capacitaciones y docencia
     private JTextField txtCapInstTitulo;
     private JTextField txtCapInstExpedidoPor;
-    private JSpinner spCapInstFecha;
+    private JDateChooser spCapInstFecha;
     private JTextField txtMaxCapExtraTitulo;
     private JTextField txtMaxCapExtraExpedidoPor;
-    private JSpinner spMaxCapExtraFecha;
+    private JDateChooser spMaxCapExtraFecha;
     private JComboBox<String> cmbActividadProfesor;
     private JTextField txtAsignaturaTemas;
     private JComboBox<String> cmbDictaActualmente;
@@ -102,50 +126,59 @@ public class FichaDatosPersonalesFrame extends JFrame {
     // Comisiones / campañas
     private JTextField txtComisionExteriorMotivo;
     private JTextField txtComisionExteriorPaisCiudad;
-    private JSpinner spFechaInicioComision;
-    private JSpinner spFechaFinComision;
+    private JDateChooser spFechaInicioComision;
+    private JDateChooser spFechaFinComision;
     private JComboBox<String> cmbCumplioCampanasAntarticas;
     private JTextField txtCantidadCampanas;
     private JTextField txtDotacionGpoTareas;
     private JTextField txtCargoDesempenado;
-    private JSpinner spPeriodoDesde;
-    private JSpinner spPeriodoHasta;
+    private JDateChooser spPeriodoDesde;
+    private JDateChooser spPeriodoHasta;
 
     // ===== Domicilio =====
     private JTextField txtDomicilioCalle;
     private JTextField txtNumeroCalle;
     private JTextField txtLocalidad;
-    private JButton btnGeolocalizar;
 
     // ===== Preferencias =====
     private JComboBox<String> cmbEstadoCivil;
-    private JComboBox<String> cmbConyugeGrado;
+    private JComboBox<String> cmbConyugeGrado;        // (lo mantenemos por compatibilidad si lo usás en otros lados)
     private JComboBox<String> cmbDestino1;
     private JComboBox<String> cmbDestino2;
     private JTextField txtObservEstadoCivil;
-    private JTextField txtConyugeNroId;
-    private JTextField txtConyugeGradoFAA;
+
+    // Cónyuge (campos base)
     private JTextField txtConyugeApellido;
     private JTextField txtConyugeNombre;
-    private JSpinner spConyugeFechaNacimiento;
+    private JDateChooser spConyugeFechaNacimiento;
     private JTextField txtConyugeDNI;
-    private JTextField txtConyugeEspecialidad;
-    private JTextField txtConyugeDestino;
-    private JTextField txtHijos;
+
+    // Cónyuge militar? + campos condicionados
+    private JComboBox<String> cmbConyugeEsMilitar;    // Sí/No
+    private JTextField txtConyugeNroId;               // solo si militar
+   private JComboBox<String> cmbConyugeDestino;      // solo si militar
+    // Cónyuge especialidad (cascada) solo si militar
+    private JComboBox<String> cmbConyugeEscalafon;
+    private JComboBox<String> cmbConyugeEspBasica;
+    private JComboBox<String> cmbConyugeEspAvanzada;
+
+    // Hijos
+    private JComboBox<String> cmbHijos;
     private JTextField txtCantidadHijos;
 
     // TEXT AREA
     private JTextArea taImpedimentoTraslado;
 
+    // ====== LOGO (mejorado) ======
+    private static final String LOGO_RESOURCE = "/logoDGSAM.jpg";
+
     public FichaDatosPersonalesFrame(ListProvider listProvider) {
         super("Ficha de Datos Personales");
         this.listProvider = Objects.requireNonNull(listProvider, "listProvider");
 
-        // asignar icono a la ventana (esquina superior izquierda junto al título)
-        ImageIcon frameIcon = loadLogoImage();
-        if (frameIcon != null) {
-            setIconImage(frameIcon.getImage());
-        }
+        // Icono de la ventana
+        ImageIcon frameIcon = loadLogoIcon(LOGO_RESOURCE, 32, 32);
+        if (frameIcon != null) setIconImage(frameIcon.getImage());
 
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
         setMinimumSize(new Dimension(1100, 700));
@@ -154,6 +187,7 @@ public class FichaDatosPersonalesFrame extends JFrame {
         setContentPane(buildRoot());
         loadComboData();
 
+        // cascada principal
         cmbEspBasica.setEnabled(false);
         cmbEspAvanzada.setEnabled(false);
         setupCascadeListeners();
@@ -171,23 +205,27 @@ public class FichaDatosPersonalesFrame extends JFrame {
         ));
         card.setBackground(Color.WHITE);
 
-        // Panel para título + logo
-        JPanel headerPanel = new JPanel(new BorderLayout(5, 0));
+        // Header: título + logo prolijo
+        JPanel headerPanel = new JPanel(new BorderLayout());
         headerPanel.setBackground(Color.WHITE);
-        
+
         JLabel title = new JLabel("Ficha de Datos Personales");
         title.setFont(title.getFont().deriveFont(Font.BOLD, 18f));
         headerPanel.add(title, BorderLayout.WEST);
-        
-        // Agregar logo pequeño al lado del título
-        ImageIcon logo = loadLogoImage();
-        if (logo != null) {
-            JLabel logoLabel = new JLabel(logo);
-            logoLabel.setMaximumSize(new Dimension(50, 50));
-            logoLabel.setPreferredSize(new Dimension(50, 50));
-            headerPanel.add(logoLabel, BorderLayout.EAST);
+
+        JPanel logoWrap = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        logoWrap.setBackground(Color.WHITE);
+
+        ImageIcon headerLogo = loadLogoIcon(LOGO_RESOURCE, 48, 48);
+        if (headerLogo != null) {
+            JLabel logoLabel = new JLabel(headerLogo);
+            logoLabel.setPreferredSize(new Dimension(48, 48));
+            logoLabel.setMinimumSize(new Dimension(48, 48));
+            logoLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+            logoLabel.setVerticalAlignment(SwingConstants.CENTER);
+            logoWrap.add(logoLabel);
         }
-        
+        headerPanel.add(logoWrap, BorderLayout.EAST);
         card.add(headerPanel, BorderLayout.NORTH);
 
         JTabbedPane tabs = new JTabbedPane();
@@ -201,23 +239,35 @@ public class FichaDatosPersonalesFrame extends JFrame {
         return root;
     }
 
-    private ImageIcon loadLogoImage() {
-        try {
-            // Intentar cargar desde recursos
-            InputStream is = getClass().getClassLoader().getResourceAsStream("logoDGSAM.jpg");
-            if (is != null) {
-                byte[] imageBytes = is.readAllBytes();
-                is.close();
-                ImageIcon icon = new ImageIcon(imageBytes);
-                
-                // Redimensionar a 50x50 píxeles
-                Image scaledImage = icon.getImage().getScaledInstance(50, 50, Image.SCALE_SMOOTH);
-                return new ImageIcon(scaledImage);
-            }
-        } catch (IOException e) {
-            System.err.println("Error cargando logo: " + e.getMessage());
+    // =========================
+    // LOGO helpers (sin deformar)
+    // =========================
+    private ImageIcon loadLogoIcon(String resourcePath, int maxW, int maxH) {
+        try (InputStream is = FichaDatosPersonalesFrame.class.getResourceAsStream(resourcePath)) {
+            if (is == null) return null;
+            BufferedImage img = ImageIO.read(is);
+            if (img == null) return null;
+            Image scaled = scaleToFit(img, maxW, maxH);
+            return new ImageIcon(scaled);
+        } catch (Exception e) {
+            return null;
         }
-        return null;
+    }
+
+    private static Image scaleToFit(BufferedImage src, int maxW, int maxH) {
+        int w = src.getWidth();
+        int h = src.getHeight();
+        if (w <= 0 || h <= 0) return src;
+
+        double rw = (double) maxW / (double) w;
+        double rh = (double) maxH / (double) h;
+        double r = Math.min(rw, rh);
+
+        if (r >= 1.0) return src;
+
+        int nw = Math.max(1, (int) Math.round(w * r));
+        int nh = Math.max(1, (int) Math.round(h * r));
+        return src.getScaledInstance(nw, nh, Image.SCALE_SMOOTH);
     }
 
     private JComponent wrapScrollable(JComponent content) {
@@ -232,6 +282,9 @@ public class FichaDatosPersonalesFrame extends JFrame {
         return sp;
     }
 
+    // =========================
+    // Datos personales (igual)
+    // =========================
     private JComponent buildDatosPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
@@ -261,17 +314,17 @@ public class FichaDatosPersonalesFrame extends JFrame {
         txtNombres = new JTextField(18);
         txtLugarNac = new JTextField(18);
 
-        spFechaIngreso = newDateSpinner();
+        spFechaIngreso = newDatePicker();
         txtAniosEnGrado = new JTextField(6);
         txtAniosEnEspecialidad = new JTextField(6);
         cmbSeDesempena = newCombo();
         cmbCumpleTurno = newCombo();
         txtFuncion = new JTextField(18);
         txtPromedioTurnos = new JTextField(6);
-        spAptitudPsicofisicaFecha = newDateSpinner();
-        spFechaCondicionTiro = newDateSpinner();
+        spAptitudPsicofisicaFecha = newDatePicker();
+        spFechaCondicionTiro = newDatePicker();
         cmbPoseeAptoFisico = newCombo();
-        spFechaNacimiento = newDateSpinner();
+        spFechaNacimiento = newDatePicker();
 
         cmbEspBasica = newCombo();
         cmbEspAvanzada = newCombo();
@@ -283,7 +336,7 @@ public class FichaDatosPersonalesFrame extends JFrame {
         txtCelular = new JTextField(18);
         txtUsuarioGDE = new JTextField(18);
         txtRTI = new JTextField(12);
-        txtFactorSanguineo = new JTextField(8);
+        cmbFactorSanguineo = newCombo();
         cmbUnidadRevista = newCombo();
         txtDestinoInterno = new JTextField(18);
         txtCargo = new JTextField(18);
@@ -293,22 +346,22 @@ public class FichaDatosPersonalesFrame extends JFrame {
         // Idiomas
         txtIdioma1 = new JTextField(12);
         txtNivelIdioma1 = new JTextField(8);
-        spFechaNivel1 = newDateSpinner();
+        spFechaNivel1 = newDatePicker();
         txtIdioma2 = new JTextField(12);
         txtNivelIdioma2 = new JTextField(8);
-        spFechaNivel2 = newDateSpinner();
+        spFechaNivel2 = newDatePicker();
         txtIdioma3 = new JTextField(12);
         txtNivelIdioma3 = new JTextField(8);
-        spFechaNivel3 = newDateSpinner();
+        spFechaNivel3 = newDatePicker();
         cmbRindioSidiel = newCombo();
 
         // Capacitaciones / docencia
         txtCapInstTitulo = new JTextField(18);
         txtCapInstExpedidoPor = new JTextField(18);
-        spCapInstFecha = newDateSpinner();
+        spCapInstFecha = newDatePicker();
         txtMaxCapExtraTitulo = new JTextField(18);
         txtMaxCapExtraExpedidoPor = new JTextField(18);
-        spMaxCapExtraFecha = newDateSpinner();
+        spMaxCapExtraFecha = newDatePicker();
         cmbActividadProfesor = newCombo();
         txtAsignaturaTemas = new JTextField(18);
         cmbDictaActualmente = newCombo();
@@ -318,14 +371,14 @@ public class FichaDatosPersonalesFrame extends JFrame {
         // Comisiones / campañas
         txtComisionExteriorMotivo = new JTextField(18);
         txtComisionExteriorPaisCiudad = new JTextField(18);
-        spFechaInicioComision = newDateSpinner();
-        spFechaFinComision = newDateSpinner();
+        spFechaInicioComision = newDatePicker();
+        spFechaFinComision = newDatePicker();
         cmbCumplioCampanasAntarticas = newCombo();
         txtCantidadCampanas = new JTextField(6);
         txtDotacionGpoTareas = new JTextField(18);
         txtCargoDesempenado = new JTextField(18);
-        spPeriodoDesde = newDateSpinner();
-        spPeriodoHasta = newDateSpinner();
+        spPeriodoDesde = newDatePicker();
+        spPeriodoHasta = newDatePicker();
 
         // ===== TOP (3 columnas) =====
         int rL = 0;
@@ -359,7 +412,7 @@ public class FichaDatosPersonalesFrame extends JFrame {
         int rRTop = 0;
         addField(colRTop, rRTop++, "Usuario GDE (sin @faa.mil.ar)", txtUsuarioGDE);
         addField(colRTop, rRTop++, "RTI", txtRTI);
-        addField(colRTop, rRTop++, "Factor sanguíneo", txtFactorSanguineo);
+        addField(colRTop, rRTop++, "Factor sanguíneo", cmbFactorSanguineo);
         addField(colRTop, rRTop++, "Unidad de revista", cmbUnidadRevista);
         addField(colRTop, rRTop++, "Destino interno", txtDestinoInterno);
         addField(colRTop, rRTop++, "Cargo", txtCargo);
@@ -402,12 +455,12 @@ public class FichaDatosPersonalesFrame extends JFrame {
         addField(bottomFull, rb++, "Rindió examen SIDIEL?", cmbRindioSidiel);
 
         addSectionTitle(bottomFull, rb++, "Capacitaciones / Docencia");
-        addField(bottomFull, rb++, "Capacitación inst. - Título", txtCapInstTitulo);
-        addField(bottomFull, rb++, "Capacitación inst. - Expedido por", txtCapInstExpedidoPor);
-        addField(bottomFull, rb++, "Capacitación inst. - Fecha", spCapInstFecha);
-        addField(bottomFull, rb++, "Máx. cap. extra - Título", txtMaxCapExtraTitulo);
-        addField(bottomFull, rb++, "Máx. cap. extra - Expedido por", txtMaxCapExtraExpedidoPor);
-        addField(bottomFull, rb++, "Máx. cap. extra - Fecha", spMaxCapExtraFecha);
+        addField(bottomFull, rb++, "Capacitación Institucional - Título", txtCapInstTitulo);
+        addField(bottomFull, rb++, "Capacitación Institucional - Expedido por", txtCapInstExpedidoPor);
+        addField(bottomFull, rb++, "Capacitación Institucional - Fecha", spCapInstFecha);
+        addField(bottomFull, rb++, "Máxima capacitación extra institucional - Título", txtMaxCapExtraTitulo);
+        addField(bottomFull, rb++, "Máxima capacitación extra institucional - Expedido por", txtMaxCapExtraExpedidoPor);
+        addField(bottomFull, rb++, "Máxima capacitación extra institucional - Fecha", spMaxCapExtraFecha);
         addField(bottomFull, rb++, "Actividad como profesor/instructor?", cmbActividadProfesor);
         addField(bottomFull, rb++, "Asignatura/temas", txtAsignaturaTemas);
         addField(bottomFull, rb++, "Dicta actualmente?", cmbDictaActualmente);
@@ -443,7 +496,6 @@ public class FichaDatosPersonalesFrame extends JFrame {
         c.insets = new Insets(0, 0, 0, 0);
         panel.add(bottomFull, c);
 
-        // Spacer final
         c.gridx = 0;
         c.gridy = 2;
         c.weighty = 1.0;
@@ -471,6 +523,9 @@ public class FichaDatosPersonalesFrame extends JFrame {
         host.add(new JSeparator(), c);
     }
 
+    // =========================
+    // Domicilio (igual)
+    // =========================
     private JComponent buildDomicilioPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
@@ -487,8 +542,6 @@ public class FichaDatosPersonalesFrame extends JFrame {
         txtCP = new JTextField(18);
 
         cmbProvincia = newCombo();
-        btnGeolocalizar = new JButton("Obtener ubicación aproximada");
-        btnGeolocalizar.addActionListener(this::obtenerUbicacion);
 
         int rL = 0;
         addField(colL, rL++, "Domicilio - Calle", txtDomicilioCalle);
@@ -512,13 +565,6 @@ public class FichaDatosPersonalesFrame extends JFrame {
 
         c.gridx = 0; c.gridy = 1;
         c.gridwidth = 2;
-        c.fill = GridBagConstraints.NONE;
-        c.anchor = GridBagConstraints.CENTER;
-        c.insets = new Insets(12, 0, 0, 0);
-        panel.add(btnGeolocalizar, c);
-
-        c.gridx = 0; c.gridy = 2;
-        c.gridwidth = 2;
         c.weighty = 1.0;
         c.fill = GridBagConstraints.BOTH;
         panel.add(Box.createVerticalGlue(), c);
@@ -526,6 +572,9 @@ public class FichaDatosPersonalesFrame extends JFrame {
         return panel;
     }
 
+    // =========================
+    // Preferencias (CAMBIOS CÓNYUGE)
+    // =========================
     private JComponent buildPreferenciasPanel() {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBackground(Color.WHITE);
@@ -537,21 +586,31 @@ public class FichaDatosPersonalesFrame extends JFrame {
         colR.setBackground(Color.WHITE);
 
         cmbEstadoCivil = newCombo();
-        cmbConyugeGrado = newCombo();
+        cmbConyugeGrado = newCombo(); // queda, pero ya no lo mostramos si no querés (lo dejamos por compat.)
         cmbDestino1 = newCombo();
         cmbDestino2 = newCombo();
 
         txtObservEstadoCivil = new JTextField(18);
-        txtConyugeNroId = new JTextField(12);
-        txtConyugeGradoFAA = new JTextField(12);
+
+        // Cónyuge base
         txtConyugeApellido = new JTextField(18);
         txtConyugeNombre = new JTextField(18);
-        spConyugeFechaNacimiento = newDateSpinner();
+        spConyugeFechaNacimiento = newDatePicker();
         txtConyugeDNI = new JTextField(12);
-        txtConyugeEspecialidad = new JTextField(18);
-        txtConyugeDestino = new JTextField(18);
-        txtHijos = new JTextField(6);
+
+        // Cónyuge militar + condicionados
+        cmbConyugeEsMilitar = newCombo();
+        txtConyugeNroId = new JTextField(12);
+        cmbConyugeDestino = newCombo();
+
+        cmbConyugeEscalafon = newCombo();
+        cmbConyugeEspBasica = newCombo();
+        cmbConyugeEspAvanzada = newCombo();
+
+        // Hijos
+        cmbHijos = newCombo();
         txtCantidadHijos = new JTextField(6);
+        txtCantidadHijos.setEnabled(false);
 
         taImpedimentoTraslado = new JTextArea(6, 24);
         taImpedimentoTraslado.setLineWrap(true);
@@ -559,26 +618,37 @@ public class FichaDatosPersonalesFrame extends JFrame {
         JScrollPane spImpedimento = new JScrollPane(taImpedimentoTraslado);
         spImpedimento.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
 
+        // Lado izquierdo: reordenado + condicional
         int rL = 0;
         addField(colL, rL++, "Estado civil", cmbEstadoCivil);
-        addField(colL, rL++, "Cónyuge - Grado", cmbConyugeGrado);
         addField(colL, rL++, "Observaciones estado civil", txtObservEstadoCivil);
-        addField(colL, rL++, "Cónyuge - Nro identificación", txtConyugeNroId);
-        addField(colL, rL++, "Cónyuge - Grado FAA (si corresponde)", txtConyugeGradoFAA);
+
+        addSectionTitle(colL, rL++, "Datos del cónyuge");
         addField(colL, rL++, "Cónyuge - Apellido", txtConyugeApellido);
         addField(colL, rL++, "Cónyuge - Nombre", txtConyugeNombre);
-        addField(colL, rL++, "Cónyuge - Fecha nacimiento", spConyugeFechaNacimiento);
         addField(colL, rL++, "Cónyuge - DNI", txtConyugeDNI);
-        addField(colL, rL++, "Cónyuge - Especialidad", txtConyugeEspecialidad);
-        addField(colL, rL++, "Cónyuge - Destino", txtConyugeDestino);
-        addField(colL, rL++, "Hijos (S/N)", txtHijos);
+        addField(colL, rL++, "Cónyuge - Fecha nacimiento", spConyugeFechaNacimiento);
+
+        addField(colL, rL++, "¿Cónyuge es militar?", cmbConyugeEsMilitar);
+
+        addField(colL, rL++, "Cónyuge - Grado", cmbConyugeGrado);
+        addField(colL, rL++, "Cónyuge - Nro identificación", txtConyugeNroId);
+        addField(colL, rL++, "Cónyuge - Destino", cmbConyugeDestino);
+
+        addField(colL, rL++, "Cónyuge - Escalafón", cmbConyugeEscalafon);
+        addField(colL, rL++, "Cónyuge - Especialidad básica / primaria", cmbConyugeEspBasica);
+        addField(colL, rL++, "Cónyuge - Especialidad avanzada", cmbConyugeEspAvanzada);
+
+        addField(colL, rL++, "Hijos (S/N)", cmbHijos);
         addField(colL, rL++, "Cantidad hijos", txtCantidadHijos);
 
+        // Lado derecho (igual)
         int rR = 0;
         addField(colR, rR++, "Destino preferencia 1", cmbDestino1);
         addField(colR, rR++, "Destino preferencia 2", cmbDestino2);
         addField(colR, rR++, "Impedimento traslado (justificar)", spImpedimento);
 
+        // Layout columnas
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0; c.gridy = 0;
         c.weightx = 0.5; c.fill = GridBagConstraints.HORIZONTAL;
@@ -596,9 +666,121 @@ public class FichaDatosPersonalesFrame extends JFrame {
         c.fill = GridBagConstraints.BOTH;
         panel.add(Box.createVerticalGlue(), c);
 
+        // --- listeners cónyuge (evita la excepción setSelectedIndex out of bounds) ---
+        setupConyugeUIStateAndListeners();
+cmbHijos.addActionListener(e -> {
+    boolean tieneHijos = "Sí".equalsIgnoreCase(valueOf(cmbHijos));
+    txtCantidadHijos.setEnabled(tieneHijos);
+
+    if (!tieneHijos) {
+        txtCantidadHijos.setText("");
+    }
+});
         return panel;
     }
 
+    private void setupConyugeUIStateAndListeners() {
+        // Estado inicial: deshabilitados hasta que elija "Sí"
+        applyConyugeMilitarUI(false);
+
+        cmbConyugeEsMilitar.addActionListener(e -> {
+            boolean esMil = "Sí".equalsIgnoreCase(valueOf(cmbConyugeEsMilitar));
+            applyConyugeMilitarUI(esMil);
+        });
+
+        // cascada cónyuge (usa los mismos mapas)
+        cmbConyugeEscalafon.addActionListener(e -> {
+            if (!"Sí".equalsIgnoreCase(valueOf(cmbConyugeEsMilitar))) return;
+
+            String escalafon = valueOf(cmbConyugeEscalafon);
+
+            if (escalafon_especBasicaMap.isEmpty()) {
+                cmbConyugeEspBasica.setEnabled(!escalafon.isEmpty());
+                cmbConyugeEspAvanzada.setEnabled(!escalafon.isEmpty());
+                return;
+            }
+
+            if (escalafon.isEmpty()) {
+                cmbConyugeEspBasica.setEnabled(false);
+                cmbConyugeEspAvanzada.setEnabled(false);
+                fillComboSafe(cmbConyugeEspBasica, Collections.emptyList());
+                fillComboSafe(cmbConyugeEspAvanzada, Collections.emptyList());
+            } else {
+                cmbConyugeEspBasica.setEnabled(true);
+                Set<String> basicas = escalafon_especBasicaMap.getOrDefault(escalafon, new TreeSet<>(String.CASE_INSENSITIVE_ORDER));
+                fillComboSafe(cmbConyugeEspBasica, new ArrayList<>(basicas));
+                cmbConyugeEspAvanzada.setEnabled(false);
+                fillComboSafe(cmbConyugeEspAvanzada, Collections.emptyList());
+            }
+        });
+
+        cmbConyugeEspBasica.addActionListener(e -> {
+            if (!"Sí".equalsIgnoreCase(valueOf(cmbConyugeEsMilitar))) return;
+
+            String basica = valueOf(cmbConyugeEspBasica);
+
+            if (especBasica_especAvanzadaMap.isEmpty()) {
+                cmbConyugeEspAvanzada.setEnabled(!basica.isEmpty());
+                return;
+            }
+
+            if (basica.isEmpty()) {
+                cmbConyugeEspAvanzada.setEnabled(false);
+                fillComboSafe(cmbConyugeEspAvanzada, Collections.emptyList());
+            } else {
+                cmbConyugeEspAvanzada.setEnabled(true);
+                Set<String> avanzadas = especBasica_especAvanzadaMap.getOrDefault(basica, new TreeSet<>(String.CASE_INSENSITIVE_ORDER));
+                fillComboSafe(cmbConyugeEspAvanzada, new ArrayList<>(avanzadas));
+            }
+        });
+    }
+
+    private void applyConyugeMilitarUI(boolean esMilitar) {
+   txtConyugeNroId.setEnabled(esMilitar);
+cmbConyugeDestino.setEnabled(esMilitar);
+
+cmbConyugeGrado.setEnabled(esMilitar);
+cmbConyugeEscalafon.setEnabled(esMilitar);
+
+if (!esMilitar) {
+    txtConyugeNroId.setText("");
+
+    safeSelectIndex(cmbConyugeGrado, 0);
+    safeSelectIndex(cmbConyugeDestino, 0);
+
+    fillComboSafe(cmbConyugeEscalafon, getComboItemsOrEmpty(cmbEscalafon));
+    safeSelectIndex(cmbConyugeEscalafon, 0);
+
+    fillComboSafe(cmbConyugeEspBasica, Collections.emptyList());
+    fillComboSafe(cmbConyugeEspAvanzada, Collections.emptyList());
+    cmbConyugeEspBasica.setEnabled(false);
+    cmbConyugeEspAvanzada.setEnabled(false);
+} else {
+    cmbConyugeEspBasica.setEnabled(false);
+    cmbConyugeEspAvanzada.setEnabled(false);
+
+    safeSelectIndex(cmbConyugeGrado, 0);
+    safeSelectIndex(cmbConyugeDestino, 0);
+    safeSelectIndex(cmbConyugeEscalafon, 0);
+
+    fillComboSafe(cmbConyugeEspBasica, Collections.emptyList());
+    fillComboSafe(cmbConyugeEspAvanzada, Collections.emptyList());
+}
+    }
+
+    private List<String> getComboItemsOrEmpty(JComboBox<String> cb) {
+        if (cb == null) return Collections.emptyList();
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < cb.getItemCount(); i++) {
+            String s = cb.getItemAt(i);
+            if (s != null && !s.isBlank()) out.add(s);
+        }
+        return out;
+    }
+
+    // =========================
+    // Footer
+    // =========================
     private JComponent buildFooterButtons() {
         JPanel footer = new JPanel(new BorderLayout());
         footer.setBackground(Color.WHITE);
@@ -626,28 +808,42 @@ public class FichaDatosPersonalesFrame extends JFrame {
         return footer;
     }
 
+    // =========================
+    // Carga combos (agrega cónyuge militar + cascada)
+    // =========================
     private void loadComboData() {
-        // Grado / provincias / etc (por listProvider)
-        fillCombo(cmbGrado, listProvider.grados());
-        fillCombo(cmbProvincia, listProvider.provincias());
-        fillCombo(cmbEstadoCivil, listProvider.estadosCiviles());
-        fillCombo(cmbConyugeGrado, listProvider.conyugeGrados());
+        fillComboSafe(cmbGrado, listProvider.grados());
+        fillComboSafe(cmbProvincia, listProvider.provincias());
+        fillComboSafe(cmbEstadoCivil, listProvider.estadosCiviles());
+        fillComboSafe(cmbConyugeGrado, listProvider.grados());
+
+        // Sí/No
+       List<String> siNo = Arrays.asList("", "Sí", "No");
+fillComboSafe(cmbHijos, siNo);
+
+List<String> gruposSanguineos = Arrays.asList(
+        "A+", "A-",
+        "B+", "B-",
+        "AB+", "AB-",
+        "O+", "O-"
+);
+fillComboSafe(cmbFactorSanguineo, gruposSanguineos);
+        if (cmbConyugeEsMilitar != null) fillComboSafe(cmbConyugeEsMilitar, siNo);
 
         // ====== Escalafón/Especialidades DESDE EXCEL (resources) ======
-        // TUS DATOS: columnas C, D, E y desde fila 8
         EspecialidadesData espData = readEspecialidadesDesdeExcelResource(
                 "/ESPECIALIDADES DEL PERSONAL MILITAR SUBALTERNO (EN PROCESO).xlsx",
-                0,   // sheet index
+                0,
                 1,   // B (0-based)
                 2,   // C
                 4,   // E
-                7    // startRow: fila 8 (0-based)
+                7
         );
 
         if (espData != null && !espData.escalafones.isEmpty()) {
-            fillCombo(cmbEscalafon, espData.escalafones);
-            fillCombo(cmbEspBasica, espData.basicas);
-            fillCombo(cmbEspAvanzada, espData.avanzadas);
+            fillComboSafe(cmbEscalafon, espData.escalafones);
+            fillComboSafe(cmbEspBasica, espData.basicas);
+            fillComboSafe(cmbEspAvanzada, espData.avanzadas);
 
             escalafon_especBasicaMap.clear();
             escalafon_especBasicaMap.putAll(espData.mapEscalafonToBasicas);
@@ -655,30 +851,35 @@ public class FichaDatosPersonalesFrame extends JFrame {
             especBasica_especAvanzadaMap.clear();
             especBasica_especAvanzadaMap.putAll(espData.mapBasicaToAvanzadas);
         } else {
-            fillCombo(cmbEspBasica, listProvider.espBasica());
-            fillCombo(cmbEspAvanzada, listProvider.espAvanzada());
-            fillCombo(cmbEscalafon, listProvider.escalafon());
+            fillComboSafe(cmbEspBasica, listProvider.espBasica());
+            fillComboSafe(cmbEspAvanzada, listProvider.espAvanzada());
+            fillComboSafe(cmbEscalafon, listProvider.escalafon());
 
             escalafon_especBasicaMap.clear();
             especBasica_especAvanzadaMap.clear();
         }
 
+        // combos cónyuge especialidad (mismas listas)
+        if (cmbConyugeEscalafon != null) fillComboSafe(cmbConyugeEscalafon, getComboItemsOrEmpty(cmbEscalafon));
+        if (cmbConyugeEspBasica != null) fillComboSafe(cmbConyugeEspBasica, Collections.emptyList());
+        if (cmbConyugeEspAvanzada != null) fillComboSafe(cmbConyugeEspAvanzada, Collections.emptyList());
+
         // Destinos desde CSV resources
         List<String> destinos = readDestinos();
-        fillCombo(cmbDestino1, destinos);
-        fillCombo(cmbDestino2, destinos);
-        fillCombo(cmbUnidadRevista, destinos);
-        fillCombo(cmbDestinoAnterior, destinos);
+fillComboSafe(cmbDestino1, destinos);
+fillComboSafe(cmbDestino2, destinos);
+fillComboSafe(cmbUnidadRevista, destinos);
+fillComboSafe(cmbDestinoAnterior, destinos);
+fillComboSafe(cmbConyugeDestino, destinos);
 
-        List<String> siNo = Arrays.asList("", "Sí", "No");
-        fillCombo(cmbSeDesempena, siNo);
-        fillCombo(cmbCumpleTurno, siNo);
-        fillCombo(cmbPoseeAptoFisico, siNo);
-        fillCombo(cmbDeseaPermanecer, siNo);
-        fillCombo(cmbRindioSidiel, siNo);
-        fillCombo(cmbActividadProfesor, siNo);
-        fillCombo(cmbDictaActualmente, siNo);
-        fillCombo(cmbCumplioCampanasAntarticas, siNo);
+        fillComboSafe(cmbSeDesempena, siNo);
+        fillComboSafe(cmbCumpleTurno, siNo);
+        fillComboSafe(cmbPoseeAptoFisico, siNo);
+        fillComboSafe(cmbDeseaPermanecer, siNo);
+        fillComboSafe(cmbRindioSidiel, siNo);
+        fillComboSafe(cmbActividadProfesor, siNo);
+        fillComboSafe(cmbDictaActualmente, siNo);
+        fillComboSafe(cmbCumplioCampanasAntarticas, siNo);
     }
 
     private static class EspecialidadesData {
@@ -689,14 +890,6 @@ public class FichaDatosPersonalesFrame extends JFrame {
         final Map<String, Set<String>> mapBasicaToAvanzadas = new HashMap<>();
     }
 
-    /**
-     * Lee escalafón/básica/avanzada desde un Excel en resources.
-     * - col indices 0-based: B=1, C=2, E=4
-     * - startRow: 0-based (fila 8 => 7)
-     *
-     * Importante: hace "carry" de escalafón y básica cuando vienen en celdas
-     * vacías (típico de Excel con celdas combinadas o valores agrupados).
-     */
     private EspecialidadesData readEspecialidadesDesdeExcelResource(
             String resourcePath,
             int sheetIndex,
@@ -719,7 +912,6 @@ public class FichaDatosPersonalesFrame extends JFrame {
                 Set<String> avanzadasSet = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 
                 int lastRow = sh.getLastRowNum();
-
                 String lastEsc = "";
                 String lastBas = "";
 
@@ -731,30 +923,21 @@ public class FichaDatosPersonalesFrame extends JFrame {
                     String basRaw = getCellString(row.getCell(colBasica));
                     String avzRaw = getCellString(row.getCell(colAvanzada));
 
-                    // carry: si vienen vacíos, repetir el último valor visto
                     String esc = !escRaw.isEmpty() ? escRaw : lastEsc;
                     String bas = !basRaw.isEmpty() ? basRaw : lastBas;
-                    String avz = avzRaw; // avanzada generalmente no se "arrastra"
+                    String avz = avzRaw;
 
-                    // si cambió escalafón explícitamente, actualizar y resetear básica arrastrada
                     if (!escRaw.isEmpty()) {
                         lastEsc = escRaw;
-                        lastBas = ""; // reset por cambio de grupo
+                        lastBas = "";
                     }
-                    // si vino básica explícita, actualizar
-                    if (!basRaw.isEmpty()) {
-                        lastBas = basRaw;
-                    }
+                    if (!basRaw.isEmpty()) lastBas = basRaw;
 
-                    // Saltar filas totalmente vacías
                     if (esc.isEmpty() && bas.isEmpty() && avz.isEmpty()) continue;
 
-                    // Si el archivo tiene encabezado raro dentro, filtralo por texto típico
                     String escLow = esc.toLowerCase(Locale.ROOT);
                     String basLow = bas.toLowerCase(Locale.ROOT);
-                    if (escLow.contains("escalaf") || basLow.contains("especialidad")) {
-                        continue;
-                    }
+                    if (escLow.contains("escalaf") || basLow.contains("especialidad")) continue;
 
                     if (!esc.isEmpty()) escalafonesSet.add(esc);
                     if (!bas.isEmpty()) basicasSet.add(bas);
@@ -788,7 +971,6 @@ public class FichaDatosPersonalesFrame extends JFrame {
         try {
             CellType t = c.getCellType();
             if (t == CellType.FORMULA) {
-                // intentamos resolverla sin romper
                 try {
                     return c.getStringCellValue().trim();
                 } catch (Exception ignored) {
@@ -821,7 +1003,6 @@ public class FichaDatosPersonalesFrame extends JFrame {
 
     private static List<String> readDestinos() {
         List<String> out = new ArrayList<>();
-
         try (InputStream is = FichaDatosPersonalesFrame.class.getResourceAsStream("/destinos.csv")) {
             if (is != null) {
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
@@ -833,16 +1014,29 @@ public class FichaDatosPersonalesFrame extends JFrame {
                 }
             }
         } catch (Exception ignored) {}
-
         if (out.isEmpty()) out.addAll(Arrays.asList("Base A", "Base B", "Base C"));
         return out;
     }
 
-    private void fillCombo(JComboBox<String> combo, List<String> items) {
+    // =========================
+    // Combo helpers (anti crash)
+    // =========================
+    private void fillComboSafe(JComboBox<String> combo, List<String> items) {
+        if (combo == null) return;
         combo.removeAllItems();
         combo.addItem("");
-        for (String s : items) combo.addItem(s);
-        combo.setSelectedIndex(0);
+        if (items != null) {
+            for (String s : items) combo.addItem(s);
+        }
+        safeSelectIndex(combo, 0);
+    }
+
+    private void safeSelectIndex(JComboBox<?> combo, int idx) {
+        if (combo == null) return;
+        int n = combo.getItemCount();
+        if (n <= 0) return;
+        int safe = Math.max(0, Math.min(idx, n - 1));
+        combo.setSelectedIndex(safe);
     }
 
     private void setupCascadeListeners() {
@@ -858,14 +1052,14 @@ public class FichaDatosPersonalesFrame extends JFrame {
             if (escalafon.isEmpty()) {
                 cmbEspBasica.setEnabled(false);
                 cmbEspAvanzada.setEnabled(false);
-                fillCombo(cmbEspBasica, new ArrayList<>());
-                fillCombo(cmbEspAvanzada, new ArrayList<>());
+                fillComboSafe(cmbEspBasica, Collections.emptyList());
+                fillComboSafe(cmbEspAvanzada, Collections.emptyList());
             } else {
                 cmbEspBasica.setEnabled(true);
                 Set<String> basicas = escalafon_especBasicaMap.getOrDefault(escalafon, new TreeSet<>(String.CASE_INSENSITIVE_ORDER));
-                fillCombo(cmbEspBasica, new ArrayList<>(basicas));
+                fillComboSafe(cmbEspBasica, new ArrayList<>(basicas));
                 cmbEspAvanzada.setEnabled(false);
-                fillCombo(cmbEspAvanzada, new ArrayList<>());
+                fillComboSafe(cmbEspAvanzada, Collections.emptyList());
             }
         });
 
@@ -879,24 +1073,28 @@ public class FichaDatosPersonalesFrame extends JFrame {
 
             if (basica.isEmpty()) {
                 cmbEspAvanzada.setEnabled(false);
-                fillCombo(cmbEspAvanzada, new ArrayList<>());
+                fillComboSafe(cmbEspAvanzada, Collections.emptyList());
             } else {
                 cmbEspAvanzada.setEnabled(true);
                 Set<String> avanzadas = especBasica_especAvanzadaMap.getOrDefault(basica, new TreeSet<>(String.CASE_INSENSITIVE_ORDER));
-                fillCombo(cmbEspAvanzada, new ArrayList<>(avanzadas));
+                fillComboSafe(cmbEspAvanzada, new ArrayList<>(avanzadas));
             }
         });
     }
 
+    // =========================
+    // Guardar / Limpiar
+    // =========================
     private void onLimpiar(ActionEvent e) {
         forEachTextField(
                 () -> txtIOSFA, () -> txtDNI, () -> txtApellido, () -> txtNombres,
                 () -> txtLugarNac, () -> txtCUIL, () -> txtCBU, () -> txtEmailInst, () -> txtCelular,
-                () -> txtUsuarioGDE, () -> txtRTI, () -> txtFactorSanguineo,
+                () -> txtUsuarioGDE, () -> txtRTI,
                 () -> txtDomicilioCalle, () -> txtNumeroCalle, () -> txtLocalidad, () -> txtCP,
-                () -> txtObservEstadoCivil, () -> txtConyugeNroId, () -> txtConyugeGradoFAA, () -> txtConyugeApellido,
-                () -> txtConyugeNombre, () -> txtConyugeDNI, () -> txtConyugeEspecialidad,
-                () -> txtConyugeDestino, () -> txtHijos, () -> txtCantidadHijos,
+                () -> txtObservEstadoCivil,
+                () -> txtConyugeNroId, () -> txtConyugeApellido, () -> txtConyugeNombre,
+                () -> txtConyugeDNI,
+                () -> txtCantidadHijos,
                 () -> txtFuncion, () -> txtPromedioTurnos,
                 () -> txtIdioma1, () -> txtNivelIdioma1, () -> txtIdioma2, () -> txtNivelIdioma2, () -> txtIdioma3, () -> txtNivelIdioma3,
                 () -> txtCapInstTitulo, () -> txtCapInstExpedidoPor, () -> txtMaxCapExtraTitulo, () -> txtMaxCapExtraExpedidoPor,
@@ -904,24 +1102,29 @@ public class FichaDatosPersonalesFrame extends JFrame {
                 () -> txtComisionExteriorMotivo, () -> txtComisionExteriorPaisCiudad, () -> txtCantidadCampanas, () -> txtDotacionGpoTareas, () -> txtCargoDesempenado,
                 () -> txtAniosEnGrado, () -> txtAniosEnEspecialidad,
                 () -> txtDestinoInterno, () -> txtCargo
-        ).forEach(tf -> tf.setText(""));
+        ).forEach(tf -> { if (tf != null) tf.setText(""); });
 
         if (taImpedimentoTraslado != null) taImpedimentoTraslado.setText("");
 
         forEachCombo(
-                () -> cmbGrado, () -> cmbEspBasica, () -> cmbEspAvanzada, () -> cmbEscalafon,
-                () -> cmbProvincia, () -> cmbEstadoCivil, () -> cmbConyugeGrado, () -> cmbDestino1, () -> cmbDestino2,
+                () -> cmbGrado, () -> cmbEspBasica, () -> cmbEspAvanzada, () -> cmbEscalafon,() -> cmbFactorSanguineo,
+                () -> cmbProvincia, () -> cmbEstadoCivil, () -> cmbDestino1, () -> cmbDestino2,
+                ()-> cmbHijos,
                 () -> cmbSeDesempena, () -> cmbCumpleTurno, () -> cmbPoseeAptoFisico, () -> cmbDeseaPermanecer,
                 () -> cmbRindioSidiel, () -> cmbActividadProfesor, () -> cmbDictaActualmente, () -> cmbCumplioCampanasAntarticas,
-                () -> cmbUnidadRevista, () -> cmbDestinoAnterior
-        ).forEach(cb -> cb.setSelectedIndex(0));
+                () -> cmbUnidadRevista, () -> cmbDestinoAnterior,
+               () -> cmbConyugeEsMilitar, () -> cmbConyugeGrado, () -> cmbConyugeDestino,
+() -> cmbConyugeEscalafon, () -> cmbConyugeEspBasica, () -> cmbConyugeEspAvanzada
+        ).forEach(cb -> safeSelectIndex(cb, 0));
 
-        forEachDateSpinner(
+        forEachDatePicker(
                 () -> spFechaNacimiento, () -> spFechaIngreso, () -> spAptitudPsicofisicaFecha, () -> spFechaCondicionTiro,
                 () -> spFechaNivel1, () -> spFechaNivel2, () -> spFechaNivel3, () -> spCapInstFecha, () -> spMaxCapExtraFecha,
                 () -> spFechaInicioComision, () -> spFechaFinComision, () -> spPeriodoDesde, () -> spPeriodoHasta,
                 () -> spConyugeFechaNacimiento
-        ).forEach(this::clearSpinnerText);
+        ).forEach(this::clearDatePicker);
+
+        applyConyugeMilitarUI(false);
     }
 
     private void onGuardar(ActionEvent e) {
@@ -960,7 +1163,7 @@ public class FichaDatosPersonalesFrame extends JFrame {
         model.celular = txtCelular.getText().trim();
         model.usuarioGDE = txtUsuarioGDE.getText().trim();
         model.rti = txtRTI.getText().trim();
-        model.factorSanguineo = txtFactorSanguineo.getText().trim();
+        model.factorSanguineo = valueOf(cmbFactorSanguineo);
         model.unidadRevista = valueOf(cmbUnidadRevista);
         model.destinoInterno = txtDestinoInterno.getText().trim();
         model.cargo = txtCargo.getText().trim();
@@ -974,22 +1177,31 @@ public class FichaDatosPersonalesFrame extends JFrame {
         model.provincia = valueOf(cmbProvincia);
 
         model.estadoCivil = valueOf(cmbEstadoCivil);
-        model.conyugeGrado = valueOf(cmbConyugeGrado);
         model.destino1 = valueOf(cmbDestino1);
         model.destino2 = valueOf(cmbDestino2);
-
         model.observacionesEstadoCivil = txtObservEstadoCivil.getText().trim();
-        model.conyugeNroIdentificacion = txtConyugeNroId.getText().trim();
-        model.conyugeGradoFAA = txtConyugeGradoFAA.getText().trim();
+
+        // Cónyuge base
         model.conyugeApellido = txtConyugeApellido.getText().trim();
         model.conyugeNombre = txtConyugeNombre.getText().trim();
         model.conyugeFechaNacimiento = dateTextOf(spConyugeFechaNacimiento);
         model.conyugeDNI = txtConyugeDNI.getText().trim();
-        model.conyugeEspecialidad = txtConyugeEspecialidad.getText().trim();
-        model.conyugeDestino = txtConyugeDestino.getText().trim();
-        model.hijos = txtHijos.getText().trim();
-        model.cantidadHijos = txtCantidadHijos.getText().trim();
 
+        // Cónyuge militar + campos condicionados
+        model.conyugeEsMilitar = valueOf(cmbConyugeEsMilitar);
+        boolean esMil = "Sí".equalsIgnoreCase(model.conyugeEsMilitar);
+
+        model.conyugeGrado = valueOf(cmbConyugeGrado);
+        model.conyugeNroIdentificacion = esMil ? txtConyugeNroId.getText().trim() : "";
+        model.conyugeDestino = esMil ? valueOf(cmbConyugeDestino) : "";
+
+        String cEsc = esMil ? valueOf(cmbConyugeEscalafon) : "";
+        String cBas = esMil ? valueOf(cmbConyugeEspBasica) : "";
+        String cAvz = esMil ? valueOf(cmbConyugeEspAvanzada) : "";
+        model.conyugeEspecialidad = esMil ? buildConyugeEspecialidadString(cEsc, cBas, cAvz) : "";
+
+        model.hijos = valueOf(cmbHijos);
+        model.cantidadHijos = txtCantidadHijos.getText().trim();
         model.impedimentoTraslado = (taImpedimentoTraslado == null) ? "" : taImpedimentoTraslado.getText().trim();
 
         model.idioma1 = txtIdioma1.getText().trim();
@@ -1027,14 +1239,24 @@ public class FichaDatosPersonalesFrame extends JFrame {
         model.periodoHasta = dateTextOf(spPeriodoHasta);
 
         try {
-            saveToExcel();
-            JOptionPane.showMessageDialog(this, "Datos guardados en planilla", "Guardar", JOptionPane.INFORMATION_MESSAGE);
+            String fileName = saveToExcel();
+            JOptionPane.showMessageDialog(this, "Datos guardados en: " + fileName, "Guardar", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(this, "Error al guardar: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    private void saveToExcel() throws IOException {
+    private String buildConyugeEspecialidadString(String esc, String bas, String avz) {
+        // Formato simple para guardar en una sola columna existente:
+        // "Escalafón | Básica | Avanzada" (omitimos vacíos)
+        List<String> parts = new ArrayList<>();
+        if (esc != null && !esc.isBlank()) parts.add(esc.trim());
+        if (bas != null && !bas.isBlank()) parts.add(bas.trim());
+        if (avz != null && !avz.isBlank()) parts.add(avz.trim());
+        return String.join(" | ", parts);
+    }
+
+    private String saveToExcel() throws IOException {
         XSSFWorkbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Ficha Datos");
 
@@ -1048,15 +1270,15 @@ public class FichaDatosPersonalesFrame extends JFrame {
                 "Unidad revista", "Destino interno", "Cargo", "Destino anterior", "Desea permanecer",
                 "Domicilio Calle", "Domicilio Número", "Localidad", "CP", "Provincia",
                 "Estado Civil", "Conyuge Grado", "Destino 1", "Destino 2",
-                "Obs Estado Civil", "Conyuge Nro ID", "Conyuge Grado FAA", "Conyuge Apellido", "Conyuge Nombre",
+                "Obs Estado Civil", "Conyuge Nro ID", "Conyuge Apellido", "Conyuge Nombre",
                 "Conyuge Fecha Nac", "Conyuge DNI", "Conyuge Especialidad", "Conyuge Destino",
                 "Hijos", "Cantidad Hijos", "Impedimento Traslado",
                 "Idioma 1", "Nivel 1", "Fecha nivel 1",
                 "Idioma 2", "Nivel 2", "Fecha nivel 2",
                 "Idioma 3", "Nivel 3", "Fecha nivel 3",
                 "Rindió SIDIEL",
-                "Cap Inst Título", "Cap Inst Expedido Por", "Cap Inst Fecha",
-                "Max Cap Extra Título", "Max Cap Extra Expedido Por", "Max Cap Extra Fecha",
+                "Capacitación Institucional Título", "Capacitación Institucional Expedido Por", "Capacitación Institucional Fecha",
+                "Máxima Capacitación Extra Institucional Título", "Maxima Capacitación Extra Institucional Expedido Por", "Maxima Capacitación Extra Institucional Fecha",
                 "Profesor", "Asignatura/Temas", "Dicta actualmente", "Modalidad", "Título habilitante",
                 "Comisión Motivo", "Comisión País/Ciudad", "Inicio comisión", "Fin comisión",
                 "Campañas antárticas", "Cantidad campañas", "Dotación/GPO", "Cargo desempeñado",
@@ -1122,7 +1344,6 @@ public class FichaDatosPersonalesFrame extends JFrame {
 
         row.createCell(ci++).setCellValue(model.observacionesEstadoCivil);
         row.createCell(ci++).setCellValue(model.conyugeNroIdentificacion);
-        row.createCell(ci++).setCellValue(model.conyugeGradoFAA);
         row.createCell(ci++).setCellValue(model.conyugeApellido);
         row.createCell(ci++).setCellValue(model.conyugeNombre);
         row.createCell(ci++).setCellValue(model.conyugeFechaNacimiento);
@@ -1173,22 +1394,23 @@ public class FichaDatosPersonalesFrame extends JFrame {
         for (int i = 0; i < headers.length; i++) sheet.autoSizeColumn(i);
         sheet.createFreezePane(0, 1);
 
-        String iosfaFile = model.iosfa == null || model.iosfa.isBlank()
-        ? "ficha_datos"
-        : model.iosfa.trim();
+        String iosfaFile = (model.iosfa == null || model.iosfa.isBlank()) ? "ficha_datos" : model.iosfa.trim();
+        String fileName = iosfaFile + ".xlsx";
 
-String fileName = iosfaFile + ".xlsx";
+        try (FileOutputStream fileOut = new FileOutputStream(fileName)) {
+            workbook.write(fileOut);
+        } finally {
+            workbook.close();
+        }
 
-try (FileOutputStream fileOut = new FileOutputStream(fileName)) {
-    workbook.write(fileOut);
-}
-        workbook.close();
+        return fileName;
     }
 
-    // ===== Helpers =====
-
+    // =========================
+    // Helpers UI / formatos
+    // =========================
     private String valueOf(JComboBox<String> cb) {
-        Object v = cb.getSelectedItem();
+        Object v = cb == null ? null : cb.getSelectedItem();
         return v == null ? "" : v.toString().trim();
     }
 
@@ -1199,40 +1421,24 @@ try (FileOutputStream fileOut = new FileOutputStream(fileName)) {
         return cb;
     }
 
-    /**
-     * Spinner de fecha (dd/MM/yyyy) con parseo estricto.
-     * Si querés "vaciar" la fecha: podés borrar el texto manualmente, y al guardar se toma "".
-     */
-    private JSpinner newDateSpinner() {
-        JSpinner sp = new JSpinner(new SpinnerDateModel(new Date(), null, null, Calendar.DAY_OF_MONTH));
-        JSpinner.DateEditor ed = new JSpinner.DateEditor(sp, "dd/MM/yyyy");
-        sp.setEditor(ed);
+    private JDateChooser newDatePicker() {
+        JDateChooser dc = new JDateChooser();
+        dc.setDateFormatString("dd/MM/yyyy");
+        dc.setDate(null);
+        return dc;
+    }
 
-        JFormattedTextField tf = ed.getTextField();
-        tf.setColumns(12);
-
+    private String dateTextOf(JDateChooser dc) {
+        if (dc == null) return "";
+        Date d = dc.getDate();
+        if (d == null) return "";
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
-        sdf.setLenient(false);
-        DateFormatter df = new DateFormatter(sdf);
-        tf.setFormatterFactory(new DefaultFormatterFactory(df));
-        tf.setFocusLostBehavior(JFormattedTextField.COMMIT_OR_REVERT);
-
-        return sp;
+        return sdf.format(d);
     }
 
-    private String dateTextOf(JSpinner sp) {
-        if (sp == null) return "";
-        if (!(sp.getEditor() instanceof JSpinner.DateEditor)) return "";
-        JFormattedTextField tf = ((JSpinner.DateEditor) sp.getEditor()).getTextField();
-        String t = tf.getText();
-        return t == null ? "" : t.trim();
-    }
-
-    private void clearSpinnerText(JSpinner sp) {
-        if (sp == null) return;
-        if (sp.getEditor() instanceof JSpinner.DateEditor) {
-            ((JSpinner.DateEditor) sp.getEditor()).getTextField().setText("");
-        }
+    private void clearDatePicker(JDateChooser dc) {
+        if (dc == null) return;
+        dc.setDate(null);
     }
 
     private void addField(JPanel host, int row, String label, JComponent field) {
@@ -1273,66 +1479,33 @@ try (FileOutputStream fileOut = new FileOutputStream(fileName)) {
     @SafeVarargs
     private final List<JTextField> forEachTextField(Supplier<JTextField>... f) {
         List<JTextField> out = new ArrayList<>();
-        for (Supplier<JTextField> s : f) out.add(s.get());
+        for (Supplier<JTextField> s : f) {
+            try { out.add(s.get()); } catch (Exception ignored) {}
+        }
         return out;
     }
 
     @SafeVarargs
-    private final List<JSpinner> forEachDateSpinner(Supplier<JSpinner>... f) {
-        List<JSpinner> out = new ArrayList<>();
-        for (Supplier<JSpinner> s : f) out.add(s.get());
+    private final List<JDateChooser> forEachDatePicker(Supplier<JDateChooser>... f) {
+        List<JDateChooser> out = new ArrayList<>();
+        for (Supplier<JDateChooser> s : f) {
+            try { out.add(s.get()); } catch (Exception ignored) {}
+        }
         return out;
     }
 
     @SafeVarargs
     private final List<JComboBox<String>> forEachCombo(Supplier<JComboBox<String>>... f) {
         List<JComboBox<String>> out = new ArrayList<>();
-        for (Supplier<JComboBox<String>> s : f) out.add(s.get());
+        for (Supplier<JComboBox<String>> s : f) {
+            try { out.add(s.get()); } catch (Exception ignored) {}
+        }
         return out;
     }
 
-    private void obtenerUbicacion(ActionEvent e) {
-        try {
-            URL url = new URL("http://ip-api.com/json");
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestMethod("GET");
-
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream(), StandardCharsets.UTF_8))) {
-                StringBuilder content = new StringBuilder();
-                String line;
-                while ((line = in.readLine()) != null) content.append(line);
-
-                Gson gson = new Gson();
-                JsonObject json = gson.fromJson(content.toString(), JsonObject.class);
-
-                if (json != null && json.has("status") && "success".equalsIgnoreCase(json.get("status").getAsString())) {
-                    String city = json.has("city") ? json.get("city").getAsString() : "";
-                    String region = json.has("regionName") ? json.get("regionName").getAsString() : "";
-                    String zip = json.has("zip") ? json.get("zip").getAsString() : "";
-
-                    txtLocalidad.setText(city);
-                    txtCP.setText(zip);
-
-                    for (int i = 0; i < cmbProvincia.getItemCount(); i++) {
-                        if (cmbProvincia.getItemAt(i).equalsIgnoreCase(region)) {
-                            cmbProvincia.setSelectedIndex(i);
-                            break;
-                        }
-                    }
-
-                    JOptionPane.showMessageDialog(this, "Ubicación aproximada obtenida.", "Geolocalización", JOptionPane.INFORMATION_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(this, "No se pudo obtener ubicación.", "Geolocalización", JOptionPane.WARNING_MESSAGE);
-                }
-            } finally {
-                conn.disconnect();
-            }
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error de conexión: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    // ===== Modelo =====
+    // =========================
+    // Modelo
+    // =========================
     static class FichaModel {
         String iosfa, dni, grado, apellido, nombres, lugarNac;
 
@@ -1345,8 +1518,16 @@ try (FileOutputStream fileOut = new FileOutputStream(fileName)) {
         String domicilioCalle, domicilioNumero, localidad, cp, provincia;
 
         String estadoCivil, conyugeGrado, destino1, destino2;
-        String observacionesEstadoCivil, conyugeNroIdentificacion, conyugeGradoFAA, conyugeApellido, conyugeNombre,
-                conyugeFechaNacimiento, conyugeDNI, conyugeEspecialidad, conyugeDestino, hijos, cantidadHijos, impedimentoTraslado;
+        String observacionesEstadoCivil;
+
+        // cónyuge base
+        String conyugeApellido, conyugeNombre, conyugeFechaNacimiento, conyugeDNI;
+
+        // cónyuge militar y condicionados
+        String conyugeEsMilitar;
+        String conyugeNroIdentificacion, conyugeGradoFAA, conyugeEspecialidad, conyugeDestino;
+
+        String hijos, cantidadHijos, impedimentoTraslado;
 
         // Idiomas
         String idioma1, nivelIdioma1, fechaNivel1;
