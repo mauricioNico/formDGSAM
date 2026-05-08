@@ -1,4 +1,4 @@
-# Script para generar la aplicación portable con jpackage
+# Script para generar el instalador .exe con jpackage
 # Ejecuta Maven para compilar y empaquetar el JAR
 Write-Host "Compilando y empaquetando el proyecto con Maven..."
 & mvn clean package -DskipTests
@@ -13,12 +13,12 @@ if (Test-Path "dist") {
     Remove-Item -Recurse -Force "dist"
 }
 
-# Ejecuta jpackage para crear la aplicación portable
-Write-Host "Generando aplicación portable con jpackage..."
-& jpackage --input target --main-jar formulario-1.0.0.jar --main-class dgsam.App --name FormularioDGSAM --type app-image --dest dist
+# Ejecuta jpackage para crear la imagen de aplicación
+Write-Host "Generando imagen de aplicación con jpackage..."
+& jpackage --input target --main-jar formulario-1.0.0.jar --main-class dgsam.App --name FormularioDGSAM --type app-image --app-version 1.0.0 --dest dist
 
 if ($LASTEXITCODE -eq 0) {
-    Write-Host "¡Aplicación portable generada exitosamente en 'dist/FormularioDGSAM'!"
+    Write-Host "¡Imagen de aplicación generada exitosamente con jpackage!"
     
     # Ocultar archivos que no son el EXE principal en la carpeta bin
     Write-Host "Ocultando archivos de soporte..."

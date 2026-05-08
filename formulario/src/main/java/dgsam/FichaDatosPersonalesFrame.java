@@ -2,6 +2,7 @@ package dgsam;
 //import com.google.gson.Gson;
 //import com.google.gson.JsonObject;
 import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -10,20 +11,30 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.plaf.basic.BasicTabbedPaneUI;
+import javax.swing.text.AbstractDocument;
+import javax.swing.text.AttributeSet;
+import javax.swing.text.BadLocationException;
+import javax.swing.text.DocumentFilter;
 /*import javax.swing.text.DateFormatter;
 import javax.swing.text.DefaultFormatterFactory;*/
+import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
-//import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.Insets;
+import java.awt.LayoutManager;
+import java.awt.RenderingHints;
+import java.awt.event.ActionEvent;
+import java.awt.image.BufferedImage;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -48,8 +59,17 @@ import java.util.TreeSet;
 import java.util.function.Supplier;
 
 import com.toedter.calendar.JDateChooser;
+import com.toedter.calendar.JTextFieldDateEditor;
 
 public class FichaDatosPersonalesFrame extends JFrame {
+
+    private static final Color FORM_ROOT_BG = new Color(0xE8F2FF);
+    private static final Color FORM_CARD_BORDER = new Color(0xC8DCFF);
+    private static final Color FORM_HEADER_BG = new Color(0x0D6EFD);
+    private static final Color FORM_HEADER_TEXT = Color.WHITE;
+    private static final Color FORM_LABEL_TEXT = new Color(0x1D3A6A);
+    private static final Color FORM_BUTTON_PRIMARY = new Color(0x0D6EFD);
+    private static final Color FORM_BUTTON_SECONDARY = new Color(0x6C757D);
 
     private final ListProvider listProvider;
     private final FichaModel model = new FichaModel();
@@ -170,10 +190,10 @@ public class FichaDatosPersonalesFrame extends JFrame {
     private JTextArea taImpedimentoTraslado;
 
     // ====== LOGO (mejorado) ======
-    private static final String LOGO_RESOURCE = "/logoDGSAM.jpg";
+    private static final String LOGO_RESOURCE = "/logoDGSAM.png";
 
     public FichaDatosPersonalesFrame(ListProvider listProvider) {
-        super("Ficha de Datos Personales");
+        super("Formulario de Datos Personales - DGSAM");
         this.listProvider = Objects.requireNonNull(listProvider, "listProvider");
 
         // Icono de la ventana
@@ -196,25 +216,23 @@ public class FichaDatosPersonalesFrame extends JFrame {
     private JComponent buildRoot() {
         JPanel root = new JPanel(new BorderLayout(0, 0));
         root.setBorder(new EmptyBorder(18, 18, 18, 18));
-        root.setBackground(new Color(0xF7, 0xF7, 0xF7));
+        root.setBackground(FORM_ROOT_BG);
 
-        JPanel card = new JPanel(new BorderLayout(0, 12));
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(0xE0, 0xE0, 0xE0), 1, true),
-                new EmptyBorder(16, 16, 16, 16)
-        ));
-        card.setBackground(Color.WHITE);
+        JPanel card = createRoundedPanel(new BorderLayout(0, 12), Color.WHITE, 18, FORM_CARD_BORDER, 1);
+        card.setBorder(new EmptyBorder(16, 16, 16, 16));
 
         // Header: título + logo prolijo
         JPanel headerPanel = new JPanel(new BorderLayout());
-        headerPanel.setBackground(Color.WHITE);
+        headerPanel.setBackground(FORM_HEADER_BG);
 
-        JLabel title = new JLabel("Ficha de Datos Personales");
-        title.setFont(title.getFont().deriveFont(Font.BOLD, 18f));
-        headerPanel.add(title, BorderLayout.WEST);
+        JLabel title = new JLabel("Formulario de Datos Personales", SwingConstants.CENTER);
+        title.setFont(title.getFont().deriveFont(Font.BOLD, 20f));
+        title.setForeground(FORM_HEADER_TEXT);
+        title.setHorizontalAlignment(SwingConstants.CENTER);
+        headerPanel.add(title, BorderLayout.CENTER);
 
         JPanel logoWrap = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        logoWrap.setBackground(Color.WHITE);
+        logoWrap.setBackground(FORM_HEADER_BG);
 
         ImageIcon headerLogo = loadLogoIcon(LOGO_RESOURCE, 48, 48);
         if (headerLogo != null) {
@@ -229,6 +247,7 @@ public class FichaDatosPersonalesFrame extends JFrame {
         card.add(headerPanel, BorderLayout.NORTH);
 
         JTabbedPane tabs = new JTabbedPane();
+        styleTabbedPane(tabs);
         tabs.addTab("Datos personales", wrapScrollable(buildDatosPanel()));
         tabs.addTab("Domicilio", wrapScrollable(buildDomicilioPanel()));
         tabs.addTab("Preferencias", wrapScrollable(buildPreferenciasPanel()));
@@ -315,8 +334,8 @@ public class FichaDatosPersonalesFrame extends JFrame {
         txtLugarNac = new JTextField(18);
 
         spFechaIngreso = newDatePicker();
-        txtAniosEnGrado = new JTextField(6);
-        txtAniosEnEspecialidad = new JTextField(6);
+        txtAniosEnGrado = newNumericField(6);
+        txtAniosEnEspecialidad = newNumericField(6);
         cmbSeDesempena = newCombo();
         cmbCumpleTurno = newCombo();
         txtFuncion = new JTextField(18);
@@ -783,18 +802,18 @@ if (!esMilitar) {
     // =========================
     private JComponent buildFooterButtons() {
         JPanel footer = new JPanel(new BorderLayout());
-        footer.setBackground(Color.WHITE);
+        footer.setBackground(new Color(0xEAF3FF));
 
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        right.setBackground(Color.WHITE);
+        right.setBackground(new Color(0xEAF3FF));
 
         JButton btnLimpiar = new JButton("Limpiar");
         JButton btnGuardar = new JButton("Guardar");
         JButton btnCerrar = new JButton("Cerrar");
 
-        styleButtonOutline(btnLimpiar, new Color(0x0D, 0x6E, 0xFD));
-        styleButtonPrimary(btnGuardar, new Color(0x0D, 0x6E, 0xFD));
-        styleButtonSecondary(btnCerrar, new Color(0x6C, 0x75, 0x7D));
+        styleButtonOutline(btnLimpiar, FORM_BUTTON_PRIMARY);
+        styleButtonPrimary(btnGuardar, FORM_BUTTON_PRIMARY);
+        styleButtonSecondary(btnCerrar, FORM_BUTTON_SECONDARY);
 
         btnLimpiar.addActionListener(this::onLimpiar);
         btnGuardar.addActionListener(this::onGuardar);
@@ -1128,9 +1147,7 @@ fillComboSafe(cmbConyugeDestino, destinos);
     }
 
     private void onGuardar(ActionEvent e) {
-        if (txtDNI.getText().trim().isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Debe ingresar DNI.", "Validación", JOptionPane.WARNING_MESSAGE);
-            txtDNI.requestFocusInWindow();
+        if (!validateForm()) {
             return;
         }
 
@@ -1246,6 +1263,124 @@ fillComboSafe(cmbConyugeDestino, destinos);
         }
     }
 
+    private boolean validateForm() {
+        if (!validateRequiredText(txtIOSFA, "IOSFA")) return false;
+        if (!validateNoDots(txtIOSFA, "IOSFA")) return false;
+
+        if (!validateRequiredText(txtDNI, "DNI")) return false;
+        if (!validateNoDots(txtDNI, "DNI")) return false;
+
+        if (!validateRequiredText(txtApellido, "Apellido")) return false;
+        if (!validateRequiredText(txtNombres, "Nombres")) return false;
+        if (!validateRequiredText(txtLugarNac, "Lugar de nacimiento")) return false;
+
+        if (!validateDatePicker(spFechaNacimiento, "Fecha de nacimiento")) return false;
+        if (!validateDatePicker(spFechaIngreso, "Fecha de ingreso")) return false;
+        if (!validateDatePicker(spAptitudPsicofisicaFecha, "Fecha aptitud psicofísica")) return false;
+        if (!validateDatePicker(spFechaCondicionTiro, "Fecha condición tiro")) return false;
+
+        if (!validateDigitsOnly(txtAniosEnGrado, "Años en el grado")) return false;
+        if (!validateDigitsOnly(txtAniosEnEspecialidad, "Años en la especialidad")) return false;
+        if (!validateDigitsOnly(txtPromedioTurnos, "Promedio de turnos")) return false;
+
+        if (!validateRequiredText(txtCUIL, "CUIL")) return false;
+        if (!validateRequiredText(txtCBU, "CBU")) return false;
+        if (!validateDigitsOnly(txtCBU, "CBU")) return false;
+        if (!validateRequiredText(txtCelular, "Celular")) return false;
+        if (!validateDigitsOnly(txtCelular, "Celular")) return false;
+
+        if (!validateRequiredText(txtEmailInst, "Email institucional")) return false;
+        if (!validateRequiredText(txtUsuarioGDE, "Usuario GDE")) return false;
+        if (!validateRequiredText(txtRTI, "RTI")) return false;
+
+        if (!validateRequiredText(txtDestinoInterno, "Destino interno")) return false;
+        if (!validateRequiredText(txtCargo, "Cargo")) return false;
+        if (!validateRequiredText(txtDomicilioCalle, "Domicilio calle")) return false;
+        if (!validateRequiredText(txtNumeroCalle, "Número de domicilio")) return false;
+        if (!validateRequiredText(txtLocalidad, "Localidad")) return false;
+        if (!validateRequiredText(txtCP, "Código postal")) return false;
+
+        if (!validateCombo(cmbGrado, "Grado")) return false;
+        if (!validateCombo(cmbSeDesempena, "¿Se desempeña en la especialidad actualmente?") ) return false;
+        if (!validateCombo(cmbCumpleTurno, "¿Cumple turno o servicio?") ) return false;
+        if (!validateCombo(cmbPoseeAptoFisico, "¿Posee apto físico?") ) return false;
+        if (!validateCombo(cmbDeseaPermanecer, "Desea permanecer en el destino actual?") ) return false;
+        if (!validateCombo(cmbFactorSanguineo, "Factor sanguíneo")) return false;
+        if (!validateCombo(cmbUnidadRevista, "Unidad revista")) return false;
+        if (!validateCombo(cmbDestinoAnterior, "Destino anterior")) return false;
+        if (!validateCombo(cmbProvincia, "Provincia")) return false;
+        if (!validateCombo(cmbEstadoCivil, "Estado civil")) return false;
+
+        if (!validateCombo(cmbHijos, "¿Hijos?")) return false;
+        if ("Sí".equalsIgnoreCase(valueOf(cmbHijos)) && !validateDigitsOnly(txtCantidadHijos, "Cantidad de hijos")) return false;
+
+        if (!validateCombo(cmbConyugeEsMilitar, "¿Cónyuge es militar?")) return false;
+        if ("Sí".equalsIgnoreCase(valueOf(cmbConyugeEsMilitar))) {
+            if (!validateRequiredText(txtConyugeNroId, "Número de identificación del cónyuge")) return false;
+            if (!validateCombo(cmbConyugeDestino, "Destino del cónyuge")) return false;
+            if (!validateCombo(cmbConyugeEscalafon, "Escalafón del cónyuge")) return false;
+            if (!validateCombo(cmbConyugeEspBasica, "Especialidad básica del cónyuge")) return false;
+            if (!validateCombo(cmbConyugeEspAvanzada, "Especialidad avanzada del cónyuge")) return false;
+        }
+
+        return true;
+    }
+
+    private boolean validateRequiredText(JTextField field, String fieldName) {
+        if (field == null || field.getText().trim().isEmpty()) {
+            showValidationMessage(fieldName + " es obligatorio.");
+            if (field != null) field.requestFocusInWindow();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateNoDots(JTextField field, String fieldName) {
+        if (field == null) return true;
+        if (field.getText().trim().contains(".")) {
+            showValidationMessage(fieldName + " no puede contener puntos.");
+            field.requestFocusInWindow();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateDatePicker(JDateChooser datePicker, String fieldName) {
+        if (datePicker == null || datePicker.getDate() == null) {
+            showValidationMessage(fieldName + " es obligatorio.");
+            if (datePicker != null) datePicker.requestFocusInWindow();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateDigitsOnly(JTextField field, String fieldName) {
+        if (field == null || field.getText().trim().isEmpty()) {
+            showValidationMessage(fieldName + " es obligatorio.");
+            if (field != null) field.requestFocusInWindow();
+            return false;
+        }
+        if (!field.getText().trim().matches("\\d+")) {
+            showValidationMessage(fieldName + " solo debe contener números.");
+            field.requestFocusInWindow();
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateCombo(JComboBox<String> combo, String fieldName) {
+        if (combo == null || valueOf(combo).isEmpty()) {
+            showValidationMessage(fieldName + " debe seleccionarse.");
+            if (combo != null) combo.requestFocusInWindow();
+            return false;
+        }
+        return true;
+    }
+
+    private void showValidationMessage(String message) {
+        JOptionPane.showMessageDialog(this, message, "Validación", JOptionPane.WARNING_MESSAGE);
+    }
+
     private String buildConyugeEspecialidadString(String esc, String bas, String avz) {
         // Formato simple para guardar en una sola columna existente:
         // "Escalafón | Básica | Avanzada" (omitimos vacíos)
@@ -1259,6 +1394,8 @@ fillComboSafe(cmbConyugeDestino, destinos);
     private String saveToExcel() throws IOException {
         XSSFWorkbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet("Ficha Datos");
+        CellStyle textStyle = workbook.createCellStyle();
+        textStyle.setDataFormat(workbook.createDataFormat().getFormat("@"));
 
         Row headerRow = sheet.createRow(0);
         String[] headers = {
@@ -1318,9 +1455,13 @@ fillComboSafe(cmbConyugeDestino, destinos);
         row.createCell(ci++).setCellValue(model.poseeAptoFisico);
 
         row.createCell(ci++).setCellValue(model.cuil);
-        row.createCell(ci++).setCellValue(model.cbu);
+        Cell cbuCell = row.createCell(ci++, CellType.STRING);
+        cbuCell.setCellValue(model.cbu);
+        cbuCell.setCellStyle(textStyle);
         row.createCell(ci++).setCellValue(model.emailInst);
-        row.createCell(ci++).setCellValue(model.celular);
+        Cell celularCell = row.createCell(ci++, CellType.STRING);
+        celularCell.setCellValue(model.celular);
+        celularCell.setCellStyle(textStyle);
         row.createCell(ci++).setCellValue(model.usuarioGDE);
         row.createCell(ci++).setCellValue(model.rti);
         row.createCell(ci++).setCellValue(model.factorSanguineo);
@@ -1331,10 +1472,18 @@ fillComboSafe(cmbConyugeDestino, destinos);
         row.createCell(ci++).setCellValue(model.destinoAnterior);
         row.createCell(ci++).setCellValue(model.deseaPermanecer);
 
-        row.createCell(ci++).setCellValue(model.domicilioCalle);
-        row.createCell(ci++).setCellValue(model.domicilioNumero);
-        row.createCell(ci++).setCellValue(model.localidad);
-        row.createCell(ci++).setCellValue(model.cp);
+        Cell domicilioCalleCell = row.createCell(ci++, CellType.STRING);
+        domicilioCalleCell.setCellValue(model.domicilioCalle);
+        domicilioCalleCell.setCellStyle(textStyle);
+        Cell domicilioNumeroCell = row.createCell(ci++, CellType.STRING);
+        domicilioNumeroCell.setCellValue(model.domicilioNumero);
+        domicilioNumeroCell.setCellStyle(textStyle);
+        Cell localidadCell = row.createCell(ci++, CellType.STRING);
+        localidadCell.setCellValue(model.localidad);
+        localidadCell.setCellStyle(textStyle);
+        Cell cpCell = row.createCell(ci++, CellType.STRING);
+        cpCell.setCellValue(model.cp);
+        cpCell.setCellStyle(textStyle);
         row.createCell(ci++).setCellValue(model.provincia);
 
         row.createCell(ci++).setCellValue(model.estadoCivil);
@@ -1421,10 +1570,35 @@ fillComboSafe(cmbConyugeDestino, destinos);
         return cb;
     }
 
+    private JTextField newNumericField(int columns) {
+        JTextField field = new JTextField(columns);
+        ((AbstractDocument) field.getDocument()).setDocumentFilter(new NumericDocumentFilter());
+        return field;
+    }
+
+    private static class NumericDocumentFilter extends DocumentFilter {
+        @Override
+        public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+            if (string == null || string.matches("\\d*")) {
+                super.insertString(fb, offset, string, attr);
+            }
+        }
+
+        @Override
+        public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+            if (text == null || text.matches("\\d*")) {
+                super.replace(fb, offset, length, text, attrs);
+            }
+        }
+    }
+
     private JDateChooser newDatePicker() {
         JDateChooser dc = new JDateChooser();
         dc.setDateFormatString("dd/MM/yyyy");
         dc.setDate(null);
+        if (dc.getDateEditor() instanceof JTextFieldDateEditor editor) {
+            editor.setEditable(false);
+        }
         return dc;
     }
 
@@ -1451,6 +1625,7 @@ fillComboSafe(cmbConyugeDestino, destinos);
 
         JLabel lbl = new JLabel(label);
         lbl.setFont(lbl.getFont().deriveFont(Font.PLAIN, 12f));
+        lbl.setForeground(FORM_LABEL_TEXT);
         host.add(lbl, c);
 
         c.gridx = 0; c.gridy = row * 2 + 1;
@@ -1461,19 +1636,129 @@ fillComboSafe(cmbConyugeDestino, destinos);
     private void styleButtonPrimary(JButton b, Color color) {
         b.setBackground(color);
         b.setForeground(Color.WHITE);
+        b.setOpaque(true);
+        b.setBorder(BorderFactory.createEmptyBorder(10, 18, 10, 18));
         b.setFocusPainted(false);
     }
 
     private void styleButtonSecondary(JButton b, Color color) {
         b.setBackground(color);
         b.setForeground(Color.WHITE);
+        b.setOpaque(true);
+        b.setBorder(BorderFactory.createEmptyBorder(10, 18, 10, 18));
         b.setFocusPainted(false);
     }
 
     private void styleButtonOutline(JButton b, Color color) {
         b.setBackground(Color.WHITE);
         b.setForeground(color);
+        b.setOpaque(true);
+        b.setBorder(BorderFactory.createLineBorder(color, 1));
         b.setFocusPainted(false);
+    }
+
+    private void styleTabbedPane(JTabbedPane tabs) {
+        tabs.setOpaque(true);
+        tabs.setFont(tabs.getFont().deriveFont(Font.BOLD, 13f));
+        tabs.setBackground(new Color(0xEBF5FF));
+        tabs.setForeground(FORM_HEADER_BG);
+        tabs.setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        tabs.setUI(new BasicTabbedPaneUI() {
+            @Override
+            protected void installDefaults() {
+                super.installDefaults();
+                tabAreaInsets = new Insets(0, 0, 0, 0);
+                tabInsets = new Insets(8, 16, 8, 16);
+                selectedTabPadInsets = new Insets(4, 12, 4, 12);
+                contentBorderInsets = new Insets(12, 12, 12, 12);
+            }
+
+            @Override
+            protected void paintTabArea(Graphics g, int tabPlacement, int selectedIndex) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setColor(new Color(0xEBF5FF));
+                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.dispose();
+                super.paintTabArea(g, tabPlacement, selectedIndex);
+            }
+
+            @Override
+            protected void paintTabBackground(Graphics g, int tabPlacement, int tabIndex,
+                                              int x, int y, int w, int h, boolean isSelected) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(isSelected ? FORM_BUTTON_PRIMARY : new Color(0xDCE9FF));
+                g2.fillRoundRect(x + 4, y + 4, Math.max(0, w - 8), Math.max(0, h - 6), 16, 16);
+                g2.dispose();
+            }
+
+            @Override
+            protected void paintTabBorder(Graphics g, int tabPlacement, int tabIndex,
+                                          int x, int y, int w, int h, boolean isSelected) {
+                // No border around tabs, rely on rounded backgrounds
+            }
+
+            @Override
+            protected void paintText(Graphics g, int tabPlacement, Font font, java.awt.FontMetrics metrics,
+                                     int tabIndex, String title, Rectangle textRect, boolean isSelected) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setFont(font);
+                g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+                g2.setColor(isSelected ? Color.WHITE : FORM_HEADER_BG.darker());
+                int textX = textRect.x;
+                int textY = textRect.y + metrics.getAscent();
+                g2.drawString(title, textX, textY);
+                g2.dispose();
+            }
+
+            @Override
+protected void paintContentBorder(Graphics g, int tabPlacement, int selectedIndex) {
+    Graphics2D g2 = (Graphics2D) g.create();
+
+    int tabAreaHeight = calculateTabAreaHeight(tabPlacement, runCount, maxTabHeight);
+    int y = tabAreaHeight;
+
+    g2.setColor(Color.WHITE);
+    g2.fillRoundRect(0, y, getWidth(), getHeight() - y, 16, 16);
+
+    g2.setColor(FORM_CARD_BORDER);
+    g2.setStroke(new BasicStroke(1.2f));
+    g2.drawRoundRect(0, y, getWidth() - 1, getHeight() - y - 1, 16, 16);
+
+    g2.dispose();
+}
+        });
+    }
+
+    private JPanel createRoundedPanel(LayoutManager layout, Color background, int radius, Color borderColor, int borderWidth) {
+        JPanel panel = new JPanel(layout) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int shadowOffset = 6;
+                g2.setColor(new Color(0, 0, 0, 24));
+                g2.fillRoundRect(shadowOffset, shadowOffset, getWidth() - shadowOffset * 2, getHeight() - shadowOffset * 2, radius, radius);
+
+                g2.setColor(background);
+                g2.fillRoundRect(0, 0, getWidth() - shadowOffset, getHeight() - shadowOffset, radius, radius);
+
+                g2.setColor(borderColor);
+                g2.setStroke(new BasicStroke(borderWidth));
+                g2.drawRoundRect(borderWidth / 2, borderWidth / 2, getWidth() - shadowOffset - borderWidth, getHeight() - shadowOffset - borderWidth, radius, radius);
+
+                g2.dispose();
+                super.paintComponent(g);
+            }
+
+            @Override
+            public boolean isOpaque() {
+                return false;
+            }
+        };
+        panel.setOpaque(false);
+        return panel;
     }
 
     @SafeVarargs
