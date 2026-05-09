@@ -1,4 +1,5 @@
 dgsam\FichaDatosPersonalesFrame$1.class
+dgsam\FichaDatosPersonalesFrame$NoAtSignFilter.class
 dgsam\FichaDatosPersonalesFrame.class
 dgsam\ListProvider.class
 dgsam\FichaDatosPersonalesFrame$2.class
@@ -6,6 +7,8 @@ dgsam\App.class
 dgsam\ListProvider$1.class
 dgsam\ExcelAnalyzer.class
 dgsam\FichaDatosPersonalesFrame$3.class
+dgsam\FichaDatosPersonalesFrame$ComisionExteriorRow.class
 dgsam\FichaDatosPersonalesFrame$EspecialidadesData.class
 dgsam\FichaDatosPersonalesFrame$FichaModel.class
 dgsam\FichaDatosPersonalesFrame$NumericDocumentFilter.class
+dgsam\FichaDatosPersonalesFrame$4.class

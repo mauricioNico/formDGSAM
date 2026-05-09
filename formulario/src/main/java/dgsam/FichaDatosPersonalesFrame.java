@@ -74,6 +74,8 @@ public class FichaDatosPersonalesFrame extends JFrame {
     private final ListProvider listProvider;
     private final FichaModel model = new FichaModel();
 
+    private JTabbedPane tabs;
+
     // Mapeos para cascada (se cargan desde Excel si existe)
     private final Map<String, Set<String>> escalafon_especBasicaMap = new HashMap<>();
     private final Map<String, Set<String>> especBasica_especAvanzadaMap = new HashMap<>();
@@ -116,15 +118,22 @@ public class FichaDatosPersonalesFrame extends JFrame {
     private JTextField txtDestinoInterno;
     private JTextField txtCargo;
     private JComboBox<String> cmbDestinoAnterior;
+    private JTextField txtUnidadRevistaOtro;
+private JTextField txtDestinoAnteriorOtro;
+private JTextField txtDestino1Otro;
+private JTextField txtDestino2Otro;
     private JComboBox<String> cmbDeseaPermanecer;
 
     // Idiomas
+    private JComboBox<String> cmbTieneIdioma1;
     private JTextField txtIdioma1;
     private JTextField txtNivelIdioma1;
     private JDateChooser spFechaNivel1;
+    private JComboBox<String> cmbTieneIdioma2;
     private JTextField txtIdioma2;
     private JTextField txtNivelIdioma2;
     private JDateChooser spFechaNivel2;
+    private JComboBox<String> cmbTieneIdioma3;
     private JTextField txtIdioma3;
     private JTextField txtNivelIdioma3;
     private JDateChooser spFechaNivel3;
@@ -144,6 +153,11 @@ public class FichaDatosPersonalesFrame extends JFrame {
     private JTextField txtTituloHabilitante;
 
     // Comisiones / campañas
+    private JComboBox<String> cmbRealizoComisionExterior;
+    private JTextField txtCantidadComisionesExterior;
+    private JPanel panelComisionesExterior;
+    private final List<ComisionExteriorRow> comisionesExteriorRows = new ArrayList<>();
+
     private JTextField txtComisionExteriorMotivo;
     private JTextField txtComisionExteriorPaisCiudad;
     private JDateChooser spFechaInicioComision;
@@ -188,6 +202,7 @@ public class FichaDatosPersonalesFrame extends JFrame {
 
     // TEXT AREA
     private JTextArea taImpedimentoTraslado;
+    private JTextField txtConyugeDestinoOtro;
 
     // ====== LOGO (mejorado) ======
     private static final String LOGO_RESOURCE = "/logoDGSAM.png";
@@ -211,6 +226,7 @@ public class FichaDatosPersonalesFrame extends JFrame {
         cmbEspBasica.setEnabled(false);
         cmbEspAvanzada.setEnabled(false);
         setupCascadeListeners();
+        setupOtroDestinoListeners();
     }
 
     private JComponent buildRoot() {
@@ -246,7 +262,7 @@ public class FichaDatosPersonalesFrame extends JFrame {
         headerPanel.add(logoWrap, BorderLayout.EAST);
         card.add(headerPanel, BorderLayout.NORTH);
 
-        JTabbedPane tabs = new JTabbedPane();
+        tabs = new JTabbedPane();
         styleTabbedPane(tabs);
         tabs.addTab("Datos personales", wrapScrollable(buildDatosPanel()));
         tabs.addTab("Domicilio", wrapScrollable(buildDomicilioPanel()));
@@ -325,8 +341,8 @@ public class FichaDatosPersonalesFrame extends JFrame {
         bottomFull.setBackground(Color.WHITE);
 
         // ===== Inicializar controles =====
-        txtIOSFA = new JTextField(18);
-        txtDNI = new JTextField(18);
+        txtIOSFA = newNumericField(18);
+        txtDNI = newNumericField(18);
         cmbGrado = newCombo();
 
         txtApellido = new JTextField(18);
@@ -340,6 +356,8 @@ public class FichaDatosPersonalesFrame extends JFrame {
         cmbCumpleTurno = newCombo();
         txtFuncion = new JTextField(18);
         txtPromedioTurnos = new JTextField(6);
+        txtPromedioTurnos.setEnabled(false);
+
         spAptitudPsicofisicaFecha = newDatePicker();
         spFechaCondicionTiro = newDatePicker();
         cmbPoseeAptoFisico = newCombo();
@@ -349,12 +367,12 @@ public class FichaDatosPersonalesFrame extends JFrame {
         cmbEspAvanzada = newCombo();
         cmbEscalafon = newCombo();
 
-        txtCUIL = new JTextField(18);
-        txtCBU = new JTextField(18);
-        txtEmailInst = new JTextField(18);
-        txtCelular = new JTextField(18);
+        txtCUIL = newNumericField(18);
+        txtCBU = newNumericField(18);
+        txtEmailInst = newEmailField(18);
+        txtCelular = newNumericField(18);
         txtUsuarioGDE = new JTextField(18);
-        txtRTI = new JTextField(12);
+        txtRTI = newNumericField(12);
         cmbFactorSanguineo = newCombo();
         cmbUnidadRevista = newCombo();
         txtDestinoInterno = new JTextField(18);
@@ -363,16 +381,26 @@ public class FichaDatosPersonalesFrame extends JFrame {
         cmbDeseaPermanecer = newCombo();
 
         // Idiomas
+        cmbTieneIdioma1 = newCombo();
         txtIdioma1 = new JTextField(12);
-        txtNivelIdioma1 = new JTextField(8);
+        txtNivelIdioma1 = newNumericField(8);
         spFechaNivel1 = newDatePicker();
+
+        cmbTieneIdioma2 = newCombo();
         txtIdioma2 = new JTextField(12);
-        txtNivelIdioma2 = new JTextField(8);
+        txtNivelIdioma2 = newNumericField(8);
         spFechaNivel2 = newDatePicker();
+
+        cmbTieneIdioma3 = newCombo();
         txtIdioma3 = new JTextField(12);
-        txtNivelIdioma3 = new JTextField(8);
+        txtNivelIdioma3 = newNumericField(8);
         spFechaNivel3 = newDatePicker();
+
         cmbRindioSidiel = newCombo();
+
+        applyIdiomaUI(1, false);
+        applyIdiomaUI(2, false);
+        applyIdiomaUI(3, false);
 
         // Capacitaciones / docencia
         txtCapInstTitulo = new JTextField(18);
@@ -388,16 +416,39 @@ public class FichaDatosPersonalesFrame extends JFrame {
         txtTituloHabilitante = new JTextField(18);
 
         // Comisiones / campañas
+        cmbRealizoComisionExterior = newCombo();
+        txtCantidadComisionesExterior = newNumericField(6);
+        txtCantidadComisionesExterior.setEnabled(false);
+
+        panelComisionesExterior = new JPanel(new GridBagLayout());
+        panelComisionesExterior.setBackground(Color.WHITE);
+        panelComisionesExterior.setBorder(BorderFactory.createEmptyBorder(4, 0, 4, 0));
+        panelComisionesExterior.setEnabled(false);
+
+        // Se mantienen estos campos para compatibilidad con el modelo/Excel, pero la carga visual será dinámica.
         txtComisionExteriorMotivo = new JTextField(18);
         txtComisionExteriorPaisCiudad = new JTextField(18);
         spFechaInicioComision = newDatePicker();
         spFechaFinComision = newDatePicker();
+
         cmbCumplioCampanasAntarticas = newCombo();
-        txtCantidadCampanas = new JTextField(6);
+        txtCantidadCampanas = newNumericField(6);
         txtDotacionGpoTareas = new JTextField(18);
         txtCargoDesempenado = new JTextField(18);
         spPeriodoDesde = newDatePicker();
         spPeriodoHasta = newDatePicker();
+        txtUnidadRevistaOtro = new JTextField(18);
+        //para cuando no hay opciones cargadas en unidad de revista, destino anterior, destino 1 y destino 2
+txtUnidadRevistaOtro.setEnabled(false);
+
+txtDestinoAnteriorOtro = new JTextField(18);
+txtDestinoAnteriorOtro.setEnabled(false);
+
+txtDestino1Otro = new JTextField(18);
+txtDestino1Otro.setEnabled(false);
+
+txtDestino2Otro = new JTextField(18);
+txtDestino2Otro.setEnabled(false);
 
         // ===== TOP (3 columnas) =====
         int rL = 0;
@@ -408,6 +459,17 @@ public class FichaDatosPersonalesFrame extends JFrame {
         addField(colL, rL++, "Años en la especialidad", txtAniosEnEspecialidad);
         addField(colL, rL++, "¿Se desempeña en la especialidad actualmente?", cmbSeDesempena);
         addField(colL, rL++, "¿Cumple turno o servicio?", cmbCumpleTurno);
+
+        cmbCumpleTurno.addActionListener(e -> {
+            boolean cumpleTurno = "Sí".equalsIgnoreCase(valueOf(cmbCumpleTurno));
+
+            txtPromedioTurnos.setEnabled(cumpleTurno);
+
+            if (!cumpleTurno) {
+                txtPromedioTurnos.setText("");
+            }
+        });
+
         addField(colL, rL++, "Grado", cmbGrado);
         addField(colL, rL++, "Apellido", txtApellido);
         addField(colL, rL++, "Nombres", txtNombres);
@@ -429,13 +491,18 @@ public class FichaDatosPersonalesFrame extends JFrame {
         addField(colC, rC++, "Celular", txtCelular);
 
         int rRTop = 0;
-        addField(colRTop, rRTop++, "Usuario GDE (sin @faa.mil.ar)", txtUsuarioGDE);
+        addField(colRTop, rRTop++, "Usuario GDE", txtUsuarioGDE);
         addField(colRTop, rRTop++, "RTI", txtRTI);
         addField(colRTop, rRTop++, "Factor sanguíneo", cmbFactorSanguineo);
         addField(colRTop, rRTop++, "Unidad de revista", cmbUnidadRevista);
+addField(colRTop, rRTop++, "Otro - Unidad de revista", txtUnidadRevistaOtro);
+
         addField(colRTop, rRTop++, "Destino interno", txtDestinoInterno);
         addField(colRTop, rRTop++, "Cargo", txtCargo);
         addField(colRTop, rRTop++, "Destino anterior", cmbDestinoAnterior);
+        
+addField(colRTop, rRTop++, "Otro - Destino anterior", txtDestinoAnteriorOtro);
+
         addField(colRTop, rRTop++, "Desea permanecer en el destino actual?", cmbDeseaPermanecer);
 
         GridBagConstraints tc = new GridBagConstraints();
@@ -462,12 +529,15 @@ public class FichaDatosPersonalesFrame extends JFrame {
         int rb = 0;
 
         addSectionTitle(bottomFull, rb++, "Idiomas");
+        addField(bottomFull, rb++, "¿Tiene idioma 1?", cmbTieneIdioma1);
         addField(bottomFull, rb++, "Idioma 1", txtIdioma1);
         addField(bottomFull, rb++, "Nivel idioma 1", txtNivelIdioma1);
         addField(bottomFull, rb++, "Fecha nivel 1", spFechaNivel1);
+        addField(bottomFull, rb++, "¿Tiene idioma 2?", cmbTieneIdioma2);
         addField(bottomFull, rb++, "Idioma 2", txtIdioma2);
         addField(bottomFull, rb++, "Nivel idioma 2", txtNivelIdioma2);
         addField(bottomFull, rb++, "Fecha nivel 2", spFechaNivel2);
+        addField(bottomFull, rb++, "¿Tiene idioma 3?", cmbTieneIdioma3);
         addField(bottomFull, rb++, "Idioma 3", txtIdioma3);
         addField(bottomFull, rb++, "Nivel idioma 3", txtNivelIdioma3);
         addField(bottomFull, rb++, "Fecha nivel 3", spFechaNivel3);
@@ -487,10 +557,9 @@ public class FichaDatosPersonalesFrame extends JFrame {
         addField(bottomFull, rb++, "Título habilitante", txtTituloHabilitante);
 
         addSectionTitle(bottomFull, rb++, "Comisiones / Campañas");
-        addField(bottomFull, rb++, "Comisión exterior - Motivo", txtComisionExteriorMotivo);
-        addField(bottomFull, rb++, "Comisión exterior - País/Ciudad", txtComisionExteriorPaisCiudad);
-        addField(bottomFull, rb++, "Fecha inicio comisión", spFechaInicioComision);
-        addField(bottomFull, rb++, "Fecha fin comisión", spFechaFinComision);
+        addField(bottomFull, rb++, "¿Realizó comisión al exterior?", cmbRealizoComisionExterior);
+        addField(bottomFull, rb++, "Cantidad de comisiones al exterior", txtCantidadComisionesExterior);
+        addField(bottomFull, rb++, "Detalle de comisiones al exterior", panelComisionesExterior);
         addField(bottomFull, rb++, "Cumplió campañas antárticas?", cmbCumplioCampanasAntarticas);
         addField(bottomFull, rb++, "Cantidad campañas", txtCantidadCampanas);
         addField(bottomFull, rb++, "Dotación / GPO tareas", txtDotacionGpoTareas);
@@ -521,7 +590,246 @@ public class FichaDatosPersonalesFrame extends JFrame {
         c.fill = GridBagConstraints.BOTH;
         panel.add(Box.createVerticalGlue(), c);
 
+        setupIdiomaListeners();
+        setupComisionExteriorListener();
+        setupCampanasAntarticasListener();
+
         return panel;
+    }
+
+    private void setupIdiomaListeners() {
+        applyIdiomasCascadeState();
+
+        cmbTieneIdioma1.addActionListener(e -> {
+            applyIdiomaUI(1, "Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma1)));
+            if (!"Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma1))) {
+                safeSelectIndex(cmbTieneIdioma2, 0);
+                safeSelectIndex(cmbTieneIdioma3, 0);
+            }
+            applyIdiomasCascadeState();
+        });
+
+        cmbTieneIdioma2.addActionListener(e -> {
+            applyIdiomaUI(2, "Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma2)));
+            if (!"Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma2))) {
+                safeSelectIndex(cmbTieneIdioma3, 0);
+            }
+            applyIdiomasCascadeState();
+        });
+
+        cmbTieneIdioma3.addActionListener(e -> {
+            applyIdiomaUI(3, "Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma3)));
+            applyIdiomasCascadeState();
+        });
+    }
+
+    private void applyIdiomasCascadeState() {
+        boolean tiene1 = "Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma1));
+        boolean tiene2 = "Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma2));
+
+        if (cmbTieneIdioma2 != null) cmbTieneIdioma2.setEnabled(tiene1);
+        if (!tiene1) {
+            applyIdiomaUI(2, false);
+            applyIdiomaUI(3, false);
+        }
+
+        if (cmbTieneIdioma3 != null) cmbTieneIdioma3.setEnabled(tiene1 && tiene2);
+        if (!tiene1 || !tiene2) {
+            applyIdiomaUI(3, false);
+        }
+    }
+
+    private void applyIdiomaUI(int numero, boolean habilitar) {
+        JTextField idioma;
+        JTextField nivel;
+        JDateChooser fecha;
+
+        switch (numero) {
+            case 1 -> {
+                idioma = txtIdioma1;
+                nivel = txtNivelIdioma1;
+                fecha = spFechaNivel1;
+            }
+            case 2 -> {
+                idioma = txtIdioma2;
+                nivel = txtNivelIdioma2;
+                fecha = spFechaNivel2;
+            }
+            case 3 -> {
+                idioma = txtIdioma3;
+                nivel = txtNivelIdioma3;
+                fecha = spFechaNivel3;
+            }
+            default -> {
+                return;
+            }
+        }
+
+        if (idioma != null) idioma.setEnabled(habilitar);
+        if (nivel != null) nivel.setEnabled(habilitar);
+        if (fecha != null) fecha.setEnabled(habilitar);
+
+        if (!habilitar) {
+            if (idioma != null) idioma.setText("");
+            if (nivel != null) nivel.setText("");
+            if (fecha != null) fecha.setDate(null);
+        }
+    }
+
+    private void setupComisionExteriorListener() {
+        applyComisionExteriorUI(false);
+
+        cmbRealizoComisionExterior.addActionListener(e -> {
+            boolean realizo = "Sí".equalsIgnoreCase(valueOf(cmbRealizoComisionExterior));
+            applyComisionExteriorUI(realizo);
+        });
+
+        txtCantidadComisionesExterior.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
+            @Override
+            public void insertUpdate(javax.swing.event.DocumentEvent e) {
+                rebuildComisionesExteriorRowsFromCantidad();
+            }
+
+            @Override
+            public void removeUpdate(javax.swing.event.DocumentEvent e) {
+                rebuildComisionesExteriorRowsFromCantidad();
+            }
+
+            @Override
+            public void changedUpdate(javax.swing.event.DocumentEvent e) {
+                rebuildComisionesExteriorRowsFromCantidad();
+            }
+        });
+    }
+
+    private void applyComisionExteriorUI(boolean habilitar) {
+        if (txtCantidadComisionesExterior != null) txtCantidadComisionesExterior.setEnabled(habilitar);
+        if (panelComisionesExterior != null) panelComisionesExterior.setEnabled(habilitar);
+
+        if (!habilitar) {
+            if (txtCantidadComisionesExterior != null) txtCantidadComisionesExterior.setText("");
+            comisionesExteriorRows.clear();
+            if (panelComisionesExterior != null) {
+                panelComisionesExterior.removeAll();
+                panelComisionesExterior.revalidate();
+                panelComisionesExterior.repaint();
+            }
+        }
+    }
+
+    private void rebuildComisionesExteriorRowsFromCantidad() {
+        if (!"Sí".equalsIgnoreCase(valueOf(cmbRealizoComisionExterior))) return;
+
+        int cantidad = 0;
+        String raw = txtCantidadComisionesExterior.getText().trim();
+        if (!raw.isEmpty()) {
+            try {
+                cantidad = Integer.parseInt(raw);
+            } catch (NumberFormatException ignored) {
+                cantidad = 0;
+            }
+        }
+
+        cantidad = Math.max(0, Math.min(cantidad, 20));
+        rebuildComisionesExteriorRows(cantidad);
+    }
+
+    private void rebuildComisionesExteriorRows(int cantidad) {
+        comisionesExteriorRows.clear();
+        panelComisionesExterior.removeAll();
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.weightx = 1.0;
+        c.insets = new Insets(2, 0, 6, 0);
+
+        for (int i = 0; i < cantidad; i++) {
+            ComisionExteriorRow row = new ComisionExteriorRow(this);
+            comisionesExteriorRows.add(row);
+
+            JPanel rowPanel = new JPanel(new GridBagLayout());
+            rowPanel.setBackground(Color.WHITE);
+            rowPanel.setBorder(BorderFactory.createTitledBorder("Comisión al exterior " + (i + 1)));
+
+            int r = 0;
+            addField(rowPanel, r++, "Motivo", row.motivo);
+            addField(rowPanel, r++, "País/Ciudad", row.paisCiudad);
+            addField(rowPanel, r++, "Fecha inicio", row.fechaInicio);
+            addField(rowPanel, r++, "Fecha fin", row.fechaFin);
+
+            c.gridy = i;
+            panelComisionesExterior.add(rowPanel, c);
+        }
+
+        panelComisionesExterior.revalidate();
+        panelComisionesExterior.repaint();
+    }
+
+    private String joinComisionesMotivos() {
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < comisionesExteriorRows.size(); i++) {
+            ComisionExteriorRow row = comisionesExteriorRows.get(i);
+            String motivo = row.motivo.getText().trim();
+            if (!motivo.isEmpty()) out.add("Comisión " + (i + 1) + ": " + motivo);
+        }
+        return String.join(" | ", out);
+    }
+
+    private String joinComisionesPaisesCiudades() {
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < comisionesExteriorRows.size(); i++) {
+            ComisionExteriorRow row = comisionesExteriorRows.get(i);
+            String pais = row.paisCiudad.getText().trim();
+            if (!pais.isEmpty()) out.add("Comisión " + (i + 1) + ": " + pais);
+        }
+        return String.join(" | ", out);
+    }
+
+    private String joinComisionesFechasInicio() {
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < comisionesExteriorRows.size(); i++) {
+            ComisionExteriorRow row = comisionesExteriorRows.get(i);
+            String fecha = dateTextOf(row.fechaInicio);
+            if (!fecha.isEmpty()) out.add("Comisión " + (i + 1) + ": " + fecha);
+        }
+        return String.join(" | ", out);
+    }
+
+    private String joinComisionesFechasFin() {
+        List<String> out = new ArrayList<>();
+        for (int i = 0; i < comisionesExteriorRows.size(); i++) {
+            ComisionExteriorRow row = comisionesExteriorRows.get(i);
+            String fecha = dateTextOf(row.fechaFin);
+            if (!fecha.isEmpty()) out.add("Comisión " + (i + 1) + ": " + fecha);
+        }
+        return String.join(" | ", out);
+    }
+
+    private void setupCampanasAntarticasListener() {
+        applyComisionExteriorUI(false);
+        applyCampanasAntarticasUI(false);
+
+        cmbCumplioCampanasAntarticas.addActionListener(e -> {
+            boolean cumplio = "Sí".equalsIgnoreCase(valueOf(cmbCumplioCampanasAntarticas));
+            applyCampanasAntarticasUI(cumplio);
+        });
+    }
+
+    private void applyCampanasAntarticasUI(boolean habilitar) {
+        if (txtCantidadCampanas != null) txtCantidadCampanas.setEnabled(habilitar);
+        if (txtDotacionGpoTareas != null) txtDotacionGpoTareas.setEnabled(habilitar);
+        if (txtCargoDesempenado != null) txtCargoDesempenado.setEnabled(habilitar);
+        if (spPeriodoDesde != null) spPeriodoDesde.setEnabled(habilitar);
+        if (spPeriodoHasta != null) spPeriodoHasta.setEnabled(habilitar);
+
+        if (!habilitar) {
+            if (txtCantidadCampanas != null) txtCantidadCampanas.setText("");
+            if (txtDotacionGpoTareas != null) txtDotacionGpoTareas.setText("");
+            if (txtCargoDesempenado != null) txtCargoDesempenado.setText("");
+            if (spPeriodoDesde != null) spPeriodoDesde.setDate(null);
+            if (spPeriodoHasta != null) spPeriodoHasta.setDate(null);
+        }
     }
 
     private void addSectionTitle(JPanel host, int row, String title) {
@@ -556,9 +864,9 @@ public class FichaDatosPersonalesFrame extends JFrame {
         colR.setBackground(Color.WHITE);
 
         txtDomicilioCalle = new JTextField(18);
-        txtNumeroCalle = new JTextField(18);
+        txtNumeroCalle = newNumericField(18);
         txtLocalidad = new JTextField(18);
-        txtCP = new JTextField(18);
+        txtCP = newNumericField(18);
 
         cmbProvincia = newCombo();
 
@@ -615,12 +923,14 @@ public class FichaDatosPersonalesFrame extends JFrame {
         txtConyugeApellido = new JTextField(18);
         txtConyugeNombre = new JTextField(18);
         spConyugeFechaNacimiento = newDatePicker();
-        txtConyugeDNI = new JTextField(12);
+        txtConyugeDNI = newNumericField(12);
 
         // Cónyuge militar + condicionados
         cmbConyugeEsMilitar = newCombo();
-        txtConyugeNroId = new JTextField(12);
+        txtConyugeNroId = newNumericField(12);
         cmbConyugeDestino = newCombo();
+        txtConyugeDestinoOtro = new JTextField(18);
+        txtConyugeDestinoOtro.setEnabled(false);
 
         cmbConyugeEscalafon = newCombo();
         cmbConyugeEspBasica = newCombo();
@@ -628,7 +938,7 @@ public class FichaDatosPersonalesFrame extends JFrame {
 
         // Hijos
         cmbHijos = newCombo();
-        txtCantidadHijos = new JTextField(6);
+        txtCantidadHijos = newNumericField(6);
         txtCantidadHijos.setEnabled(false);
 
         taImpedimentoTraslado = new JTextArea(6, 24);
@@ -653,7 +963,7 @@ public class FichaDatosPersonalesFrame extends JFrame {
         addField(colL, rL++, "Cónyuge - Grado", cmbConyugeGrado);
         addField(colL, rL++, "Cónyuge - Nro identificación", txtConyugeNroId);
         addField(colL, rL++, "Cónyuge - Destino", cmbConyugeDestino);
-
+addField(colL, rL++, "Otro - Cónyuge destino", txtConyugeDestinoOtro);
         addField(colL, rL++, "Cónyuge - Escalafón", cmbConyugeEscalafon);
         addField(colL, rL++, "Cónyuge - Especialidad básica / primaria", cmbConyugeEspBasica);
         addField(colL, rL++, "Cónyuge - Especialidad avanzada", cmbConyugeEspAvanzada);
@@ -664,7 +974,9 @@ public class FichaDatosPersonalesFrame extends JFrame {
         // Lado derecho (igual)
         int rR = 0;
         addField(colR, rR++, "Destino preferencia 1", cmbDestino1);
+addField(colR, rR++, "Otro - Destino preferencia 1", txtDestino1Otro);
         addField(colR, rR++, "Destino preferencia 2", cmbDestino2);
+        addField(colR, rR++, "Otro - Destino preferencia 2", txtDestino2Otro);
         addField(colR, rR++, "Impedimento traslado (justificar)", spImpedimento);
 
         // Layout columnas
@@ -763,6 +1075,7 @@ cmbConyugeEscalafon.setEnabled(esMilitar);
 
 if (!esMilitar) {
     txtConyugeNroId.setText("");
+    if (txtConyugeDestinoOtro != null) txtConyugeDestinoOtro.setText("");
 
     safeSelectIndex(cmbConyugeGrado, 0);
     safeSelectIndex(cmbConyugeDestino, 0);
@@ -785,6 +1098,27 @@ if (!esMilitar) {
     fillComboSafe(cmbConyugeEspBasica, Collections.emptyList());
     fillComboSafe(cmbConyugeEspAvanzada, Collections.emptyList());
 }
+    }
+
+    private void setupOtroDestinoListeners() {
+        setupOtroField(cmbUnidadRevista, txtUnidadRevistaOtro);
+        setupOtroField(cmbDestinoAnterior, txtDestinoAnteriorOtro);
+        setupOtroField(cmbDestino1, txtDestino1Otro);
+        setupOtroField(cmbDestino2, txtDestino2Otro);
+        setupOtroField(cmbConyugeDestino, txtConyugeDestinoOtro);
+    }
+
+    private void setupOtroField(JComboBox<String> combo, JTextField textField) {
+        if (combo == null || textField == null) return;
+
+        combo.addActionListener(e -> {
+            boolean esOtro = "OTRO especificar:".equalsIgnoreCase(valueOf(combo));
+            textField.setEnabled(esOtro);
+
+            if (!esOtro) {
+                textField.setText("");
+            }
+        });
     }
 
     private List<String> getComboItemsOrEmpty(JComboBox<String> cb) {
@@ -811,7 +1145,7 @@ if (!esMilitar) {
         JButton btnGuardar = new JButton("Guardar");
         JButton btnCerrar = new JButton("Cerrar");
 
-        styleButtonOutline(btnLimpiar, FORM_BUTTON_PRIMARY);
+        styleButtonSecondary(btnLimpiar, FORM_BUTTON_SECONDARY);
         styleButtonPrimary(btnGuardar, FORM_BUTTON_PRIMARY);
         styleButtonSecondary(btnCerrar, FORM_BUTTON_SECONDARY);
 
@@ -839,6 +1173,10 @@ if (!esMilitar) {
         // Sí/No
        List<String> siNo = Arrays.asList("", "Sí", "No");
 fillComboSafe(cmbHijos, siNo);
+fillComboSafe(cmbTieneIdioma1, siNo);
+fillComboSafe(cmbTieneIdioma2, siNo);
+fillComboSafe(cmbTieneIdioma3, siNo);
+fillComboSafe(cmbRealizoComisionExterior, siNo);
 
 List<String> gruposSanguineos = Arrays.asList(
         "A+", "A-",
@@ -885,6 +1223,9 @@ fillComboSafe(cmbFactorSanguineo, gruposSanguineos);
 
         // Destinos desde CSV resources
         List<String> destinos = readDestinos();
+        if (!destinos.contains("OTRO especificar:")) {
+            destinos.add("OTRO especificar:");
+        }
 fillComboSafe(cmbDestino1, destinos);
 fillComboSafe(cmbDestino2, destinos);
 fillComboSafe(cmbUnidadRevista, destinos);
@@ -899,6 +1240,18 @@ fillComboSafe(cmbConyugeDestino, destinos);
         fillComboSafe(cmbActividadProfesor, siNo);
         fillComboSafe(cmbDictaActualmente, siNo);
         fillComboSafe(cmbCumplioCampanasAntarticas, siNo);
+    }
+
+    private static class ComisionExteriorRow {
+        final JTextField motivo = new JTextField(18);
+        final JTextField paisCiudad = new JTextField(18);
+        final JDateChooser fechaInicio;
+        final JDateChooser fechaFin;
+
+        ComisionExteriorRow(FichaDatosPersonalesFrame frame) {
+            fechaInicio = frame.newDatePicker();
+            fechaFin = frame.newDatePicker();
+        }
     }
 
     private static class EspecialidadesData {
@@ -1105,45 +1458,100 @@ fillComboSafe(cmbConyugeDestino, destinos);
     // Guardar / Limpiar
     // =========================
     private void onLimpiar(ActionEvent e) {
+        int selectedIndex = (tabs == null) ? 0 : tabs.getSelectedIndex();
+
+        switch (selectedIndex) {
+            case 0 -> limpiarDatosPersonales();
+            case 1 -> limpiarDomicilio();
+            case 2 -> limpiarPreferencias();
+            default -> limpiarDatosPersonales();
+        }
+    }
+
+    private void limpiarDatosPersonales() {
         forEachTextField(
                 () -> txtIOSFA, () -> txtDNI, () -> txtApellido, () -> txtNombres,
                 () -> txtLugarNac, () -> txtCUIL, () -> txtCBU, () -> txtEmailInst, () -> txtCelular,
                 () -> txtUsuarioGDE, () -> txtRTI,
-                () -> txtDomicilioCalle, () -> txtNumeroCalle, () -> txtLocalidad, () -> txtCP,
-                () -> txtObservEstadoCivil,
-                () -> txtConyugeNroId, () -> txtConyugeApellido, () -> txtConyugeNombre,
-                () -> txtConyugeDNI,
-                () -> txtCantidadHijos,
                 () -> txtFuncion, () -> txtPromedioTurnos,
                 () -> txtIdioma1, () -> txtNivelIdioma1, () -> txtIdioma2, () -> txtNivelIdioma2, () -> txtIdioma3, () -> txtNivelIdioma3,
                 () -> txtCapInstTitulo, () -> txtCapInstExpedidoPor, () -> txtMaxCapExtraTitulo, () -> txtMaxCapExtraExpedidoPor,
                 () -> txtAsignaturaTemas, () -> txtModalidad, () -> txtTituloHabilitante,
-                () -> txtComisionExteriorMotivo, () -> txtComisionExteriorPaisCiudad, () -> txtCantidadCampanas, () -> txtDotacionGpoTareas, () -> txtCargoDesempenado,
+                () -> txtCantidadComisionesExterior,
+                () -> txtComisionExteriorMotivo, () -> txtComisionExteriorPaisCiudad, () -> txtCantidadCampanas,
+                () -> txtDotacionGpoTareas, () -> txtCargoDesempenado,
                 () -> txtAniosEnGrado, () -> txtAniosEnEspecialidad,
-                () -> txtDestinoInterno, () -> txtCargo
+                () -> txtDestinoInterno, () -> txtCargo,
+                () -> txtUnidadRevistaOtro, () -> txtDestinoAnteriorOtro
         ).forEach(tf -> { if (tf != null) tf.setText(""); });
 
-        if (taImpedimentoTraslado != null) taImpedimentoTraslado.setText("");
-
         forEachCombo(
-                () -> cmbGrado, () -> cmbEspBasica, () -> cmbEspAvanzada, () -> cmbEscalafon,() -> cmbFactorSanguineo,
-                () -> cmbProvincia, () -> cmbEstadoCivil, () -> cmbDestino1, () -> cmbDestino2,
-                ()-> cmbHijos,
+                () -> cmbGrado, () -> cmbEspBasica, () -> cmbEspAvanzada, () -> cmbEscalafon, () -> cmbFactorSanguineo,
                 () -> cmbSeDesempena, () -> cmbCumpleTurno, () -> cmbPoseeAptoFisico, () -> cmbDeseaPermanecer,
-                () -> cmbRindioSidiel, () -> cmbActividadProfesor, () -> cmbDictaActualmente, () -> cmbCumplioCampanasAntarticas,
-                () -> cmbUnidadRevista, () -> cmbDestinoAnterior,
-               () -> cmbConyugeEsMilitar, () -> cmbConyugeGrado, () -> cmbConyugeDestino,
-() -> cmbConyugeEscalafon, () -> cmbConyugeEspBasica, () -> cmbConyugeEspAvanzada
+                () -> cmbTieneIdioma1, () -> cmbTieneIdioma2, () -> cmbTieneIdioma3,
+                () -> cmbRindioSidiel, () -> cmbActividadProfesor, () -> cmbDictaActualmente,
+                () -> cmbRealizoComisionExterior, () -> cmbCumplioCampanasAntarticas,
+                () -> cmbUnidadRevista, () -> cmbDestinoAnterior
         ).forEach(cb -> safeSelectIndex(cb, 0));
 
         forEachDatePicker(
                 () -> spFechaNacimiento, () -> spFechaIngreso, () -> spAptitudPsicofisicaFecha, () -> spFechaCondicionTiro,
                 () -> spFechaNivel1, () -> spFechaNivel2, () -> spFechaNivel3, () -> spCapInstFecha, () -> spMaxCapExtraFecha,
-                () -> spFechaInicioComision, () -> spFechaFinComision, () -> spPeriodoDesde, () -> spPeriodoHasta,
+                () -> spFechaInicioComision, () -> spFechaFinComision, () -> spPeriodoDesde, () -> spPeriodoHasta
+        ).forEach(this::clearDatePicker);
+
+        applyIdiomaUI(1, false);
+        applyIdiomaUI(2, false);
+        applyIdiomaUI(3, false);
+        applyIdiomasCascadeState();
+        applyComisionExteriorUI(false);
+        applyCampanasAntarticasUI(false);
+
+        if (txtPromedioTurnos != null) {
+            txtPromedioTurnos.setEnabled(false);
+            txtPromedioTurnos.setText("");
+        }
+    }
+
+    private void limpiarDomicilio() {
+        forEachTextField(
+                () -> txtDomicilioCalle, () -> txtNumeroCalle, () -> txtLocalidad, () -> txtCP
+        ).forEach(tf -> { if (tf != null) tf.setText(""); });
+
+        forEachCombo(
+                () -> cmbProvincia
+        ).forEach(cb -> safeSelectIndex(cb, 0));
+    }
+
+    private void limpiarPreferencias() {
+        forEachTextField(
+                () -> txtObservEstadoCivil,
+                () -> txtConyugeNroId, () -> txtConyugeApellido, () -> txtConyugeNombre,
+                () -> txtConyugeDNI,
+                () -> txtCantidadHijos,
+                () -> txtDestino1Otro, () -> txtDestino2Otro,
+                () -> txtConyugeDestinoOtro
+        ).forEach(tf -> { if (tf != null) tf.setText(""); });
+
+        if (taImpedimentoTraslado != null) taImpedimentoTraslado.setText("");
+
+        forEachCombo(
+                () -> cmbEstadoCivil, () -> cmbDestino1, () -> cmbDestino2,
+                () -> cmbHijos,
+                () -> cmbConyugeEsMilitar, () -> cmbConyugeGrado, () -> cmbConyugeDestino,
+                () -> cmbConyugeEscalafon, () -> cmbConyugeEspBasica, () -> cmbConyugeEspAvanzada
+        ).forEach(cb -> safeSelectIndex(cb, 0));
+
+        forEachDatePicker(
                 () -> spConyugeFechaNacimiento
         ).forEach(this::clearDatePicker);
 
         applyConyugeMilitarUI(false);
+
+        if (txtCantidadHijos != null) {
+            txtCantidadHijos.setEnabled(false);
+            txtCantidadHijos.setText("");
+        }
     }
 
     private void onGuardar(ActionEvent e) {
@@ -1165,7 +1573,10 @@ fillComboSafe(cmbConyugeDestino, destinos);
         model.seDesempena = valueOf(cmbSeDesempena);
         model.cumpleTurno = valueOf(cmbCumpleTurno);
         model.funcion = txtFuncion.getText().trim();
-        model.promedioTurnos = txtPromedioTurnos.getText().trim();
+        model.promedioTurnos =
+                "Sí".equalsIgnoreCase(valueOf(cmbCumpleTurno))
+                        ? txtPromedioTurnos.getText().trim()
+                        : "";
         model.aptitudPsicofisicaFecha = dateTextOf(spAptitudPsicofisicaFecha);
         model.fechaCondicionTiro = dateTextOf(spFechaCondicionTiro);
         model.poseeAptoFisico = valueOf(cmbPoseeAptoFisico);
@@ -1181,10 +1592,10 @@ fillComboSafe(cmbConyugeDestino, destinos);
         model.usuarioGDE = txtUsuarioGDE.getText().trim();
         model.rti = txtRTI.getText().trim();
         model.factorSanguineo = valueOf(cmbFactorSanguineo);
-        model.unidadRevista = valueOf(cmbUnidadRevista);
+        model.unidadRevista = valueOrOtro(cmbUnidadRevista, txtUnidadRevistaOtro);
         model.destinoInterno = txtDestinoInterno.getText().trim();
         model.cargo = txtCargo.getText().trim();
-        model.destinoAnterior = valueOf(cmbDestinoAnterior);
+        model.destinoAnterior = valueOrOtro(cmbDestinoAnterior, txtDestinoAnteriorOtro);
         model.deseaPermanecer = valueOf(cmbDeseaPermanecer);
 
         model.domicilioCalle = txtDomicilioCalle.getText().trim();
@@ -1194,8 +1605,8 @@ fillComboSafe(cmbConyugeDestino, destinos);
         model.provincia = valueOf(cmbProvincia);
 
         model.estadoCivil = valueOf(cmbEstadoCivil);
-        model.destino1 = valueOf(cmbDestino1);
-        model.destino2 = valueOf(cmbDestino2);
+        model.destino1 = valueOrOtro(cmbDestino1, txtDestino1Otro);
+        model.destino2 = valueOrOtro(cmbDestino2, txtDestino2Otro);
         model.observacionesEstadoCivil = txtObservEstadoCivil.getText().trim();
 
         // Cónyuge base
@@ -1210,7 +1621,7 @@ fillComboSafe(cmbConyugeDestino, destinos);
 
         model.conyugeGrado = valueOf(cmbConyugeGrado);
         model.conyugeNroIdentificacion = esMil ? txtConyugeNroId.getText().trim() : "";
-        model.conyugeDestino = esMil ? valueOf(cmbConyugeDestino) : "";
+        model.conyugeDestino = esMil ? valueOrOtro(cmbConyugeDestino, txtConyugeDestinoOtro) : "";
 
         String cEsc = esMil ? valueOf(cmbConyugeEscalafon) : "";
         String cBas = esMil ? valueOf(cmbConyugeEspBasica) : "";
@@ -1221,15 +1632,20 @@ fillComboSafe(cmbConyugeDestino, destinos);
         model.cantidadHijos = txtCantidadHijos.getText().trim();
         model.impedimentoTraslado = (taImpedimentoTraslado == null) ? "" : taImpedimentoTraslado.getText().trim();
 
-        model.idioma1 = txtIdioma1.getText().trim();
-        model.nivelIdioma1 = txtNivelIdioma1.getText().trim();
-        model.fechaNivel1 = dateTextOf(spFechaNivel1);
-        model.idioma2 = txtIdioma2.getText().trim();
-        model.nivelIdioma2 = txtNivelIdioma2.getText().trim();
-        model.fechaNivel2 = dateTextOf(spFechaNivel2);
-        model.idioma3 = txtIdioma3.getText().trim();
-        model.nivelIdioma3 = txtNivelIdioma3.getText().trim();
-        model.fechaNivel3 = dateTextOf(spFechaNivel3);
+        boolean tieneIdioma1 = "Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma1));
+        model.idioma1 = tieneIdioma1 ? txtIdioma1.getText().trim() : "";
+        model.nivelIdioma1 = tieneIdioma1 ? txtNivelIdioma1.getText().trim() : "";
+        model.fechaNivel1 = tieneIdioma1 ? dateTextOf(spFechaNivel1) : "";
+
+        boolean tieneIdioma2 = "Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma2));
+        model.idioma2 = tieneIdioma2 ? txtIdioma2.getText().trim() : "";
+        model.nivelIdioma2 = tieneIdioma2 ? txtNivelIdioma2.getText().trim() : "";
+        model.fechaNivel2 = tieneIdioma2 ? dateTextOf(spFechaNivel2) : "";
+
+        boolean tieneIdioma3 = "Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma3));
+        model.idioma3 = tieneIdioma3 ? txtIdioma3.getText().trim() : "";
+        model.nivelIdioma3 = tieneIdioma3 ? txtNivelIdioma3.getText().trim() : "";
+        model.fechaNivel3 = tieneIdioma3 ? dateTextOf(spFechaNivel3) : "";
         model.rindioSidiel = valueOf(cmbRindioSidiel);
 
         model.capInstTitulo = txtCapInstTitulo.getText().trim();
@@ -1244,16 +1660,18 @@ fillComboSafe(cmbConyugeDestino, destinos);
         model.modalidad = txtModalidad.getText().trim();
         model.tituloHabilitante = txtTituloHabilitante.getText().trim();
 
-        model.comisionExteriorMotivo = txtComisionExteriorMotivo.getText().trim();
-        model.comisionExteriorPaisCiudad = txtComisionExteriorPaisCiudad.getText().trim();
-        model.fechaInicioComision = dateTextOf(spFechaInicioComision);
-        model.fechaFinComision = dateTextOf(spFechaFinComision);
+        boolean realizoComisionExterior = "Sí".equalsIgnoreCase(valueOf(cmbRealizoComisionExterior));
+        model.comisionExteriorMotivo = realizoComisionExterior ? joinComisionesMotivos() : "";
+        model.comisionExteriorPaisCiudad = realizoComisionExterior ? joinComisionesPaisesCiudades() : "";
+        model.fechaInicioComision = realizoComisionExterior ? joinComisionesFechasInicio() : "";
+        model.fechaFinComision = realizoComisionExterior ? joinComisionesFechasFin() : "";
         model.cumplioCampanasAntarticas = valueOf(cmbCumplioCampanasAntarticas);
-        model.cantidadCampanas = txtCantidadCampanas.getText().trim();
-        model.dotacionGpoTareas = txtDotacionGpoTareas.getText().trim();
-        model.cargoDesempenado = txtCargoDesempenado.getText().trim();
-        model.periodoDesde = dateTextOf(spPeriodoDesde);
-        model.periodoHasta = dateTextOf(spPeriodoHasta);
+        boolean cumplioCampanas = "Sí".equalsIgnoreCase(model.cumplioCampanasAntarticas);
+        model.cantidadCampanas = cumplioCampanas ? txtCantidadCampanas.getText().trim() : "";
+        model.dotacionGpoTareas = cumplioCampanas ? txtDotacionGpoTareas.getText().trim() : "";
+        model.cargoDesempenado = cumplioCampanas ? txtCargoDesempenado.getText().trim() : "";
+        model.periodoDesde = cumplioCampanas ? dateTextOf(spPeriodoDesde) : "";
+        model.periodoHasta = cumplioCampanas ? dateTextOf(spPeriodoHasta) : "";
 
         try {
             String fileName = saveToExcel();
@@ -1281,7 +1699,9 @@ fillComboSafe(cmbConyugeDestino, destinos);
 
         if (!validateDigitsOnly(txtAniosEnGrado, "Años en el grado")) return false;
         if (!validateDigitsOnly(txtAniosEnEspecialidad, "Años en la especialidad")) return false;
-        if (!validateDigitsOnly(txtPromedioTurnos, "Promedio de turnos")) return false;
+        if ("Sí".equalsIgnoreCase(valueOf(cmbCumpleTurno))) {
+            if (!validateDigitsOnly(txtPromedioTurnos, "Promedio de turnos")) return false;
+        }
 
         if (!validateRequiredText(txtCUIL, "CUIL")) return false;
         if (!validateRequiredText(txtCBU, "CBU")) return false;
@@ -1307,17 +1727,84 @@ fillComboSafe(cmbConyugeDestino, destinos);
         if (!validateCombo(cmbDeseaPermanecer, "Desea permanecer en el destino actual?") ) return false;
         if (!validateCombo(cmbFactorSanguineo, "Factor sanguíneo")) return false;
         if (!validateCombo(cmbUnidadRevista, "Unidad revista")) return false;
+        if ("OTRO especificar:".equalsIgnoreCase(valueOf(cmbUnidadRevista))
+                && !validateRequiredText(txtUnidadRevistaOtro, "Otro - Unidad revista")) return false;
         if (!validateCombo(cmbDestinoAnterior, "Destino anterior")) return false;
+        if ("OTRO especificar:".equalsIgnoreCase(valueOf(cmbDestinoAnterior))
+                && !validateRequiredText(txtDestinoAnteriorOtro, "Otro - Destino anterior")) return false;
         if (!validateCombo(cmbProvincia, "Provincia")) return false;
         if (!validateCombo(cmbEstadoCivil, "Estado civil")) return false;
+        if (!validateCombo(cmbDestino1, "Destino preferencia 1")) return false;
+        if ("OTRO especificar:".equalsIgnoreCase(valueOf(cmbDestino1))
+                && !validateRequiredText(txtDestino1Otro, "Otro - Destino preferencia 1")) return false;
+        if (!validateCombo(cmbDestino2, "Destino preferencia 2")) return false;
+        if ("OTRO especificar:".equalsIgnoreCase(valueOf(cmbDestino2))
+                && !validateRequiredText(txtDestino2Otro, "Otro - Destino preferencia 2")) return false;
 
         if (!validateCombo(cmbHijos, "¿Hijos?")) return false;
         if ("Sí".equalsIgnoreCase(valueOf(cmbHijos)) && !validateDigitsOnly(txtCantidadHijos, "Cantidad de hijos")) return false;
+
+        if (!validateCombo(cmbTieneIdioma1, "¿Tiene idioma 1?")) return false;
+        if ("Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma1))) {
+            if (!validateRequiredText(txtIdioma1, "Idioma 1")) return false;
+            if (!validateDigitsOnly(txtNivelIdioma1, "Nivel idioma 1")) return false;
+            if (!validateDatePicker(spFechaNivel1, "Fecha nivel 1")) return false;
+        }
+
+        if (!validateCombo(cmbTieneIdioma2, "¿Tiene idioma 2?")) return false;
+        if ("Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma2))) {
+            if (!validateRequiredText(txtIdioma2, "Idioma 2")) return false;
+            if (!validateDigitsOnly(txtNivelIdioma2, "Nivel idioma 2")) return false;
+            if (!validateDatePicker(spFechaNivel2, "Fecha nivel 2")) return false;
+        }
+
+        if (!validateCombo(cmbTieneIdioma3, "¿Tiene idioma 3?")) return false;
+        if ("Sí".equalsIgnoreCase(valueOf(cmbTieneIdioma3))) {
+            if (!validateRequiredText(txtIdioma3, "Idioma 3")) return false;
+            if (!validateDigitsOnly(txtNivelIdioma3, "Nivel idioma 3")) return false;
+            if (!validateDatePicker(spFechaNivel3, "Fecha nivel 3")) return false;
+        }
+
+        if (!validateCombo(cmbRealizoComisionExterior, "¿Realizó comisión al exterior?")) return false;
+        if ("Sí".equalsIgnoreCase(valueOf(cmbRealizoComisionExterior))) {
+            if (!validateDigitsOnly(txtCantidadComisionesExterior, "Cantidad de comisiones al exterior")) return false;
+
+            int cantidad = Integer.parseInt(txtCantidadComisionesExterior.getText().trim());
+            if (cantidad <= 0) {
+                showValidationMessage("La cantidad de comisiones al exterior debe ser mayor a cero.");
+                txtCantidadComisionesExterior.requestFocusInWindow();
+                return false;
+            }
+
+            if (comisionesExteriorRows.size() != cantidad) {
+                rebuildComisionesExteriorRows(cantidad);
+            }
+
+            for (int i = 0; i < comisionesExteriorRows.size(); i++) {
+                ComisionExteriorRow row = comisionesExteriorRows.get(i);
+                String prefijo = "Comisión al exterior " + (i + 1) + " - ";
+                if (!validateRequiredText(row.motivo, prefijo + "Motivo")) return false;
+                if (!validateRequiredText(row.paisCiudad, prefijo + "País/Ciudad")) return false;
+                if (!validateDatePicker(row.fechaInicio, prefijo + "Fecha inicio")) return false;
+                if (!validateDatePicker(row.fechaFin, prefijo + "Fecha fin")) return false;
+            }
+        }
+
+        if (!validateCombo(cmbCumplioCampanasAntarticas, "¿Cumplió campañas antárticas?")) return false;
+        if ("Sí".equalsIgnoreCase(valueOf(cmbCumplioCampanasAntarticas))) {
+            if (!validateDigitsOnly(txtCantidadCampanas, "Cantidad de campañas")) return false;
+            if (!validateRequiredText(txtDotacionGpoTareas, "Dotación / GPO tareas")) return false;
+            if (!validateRequiredText(txtCargoDesempenado, "Cargo desempeñado")) return false;
+            if (!validateDatePicker(spPeriodoDesde, "Periodo desde")) return false;
+            if (!validateDatePicker(spPeriodoHasta, "Periodo hasta")) return false;
+        }
 
         if (!validateCombo(cmbConyugeEsMilitar, "¿Cónyuge es militar?")) return false;
         if ("Sí".equalsIgnoreCase(valueOf(cmbConyugeEsMilitar))) {
             if (!validateRequiredText(txtConyugeNroId, "Número de identificación del cónyuge")) return false;
             if (!validateCombo(cmbConyugeDestino, "Destino del cónyuge")) return false;
+            if ("OTRO especificar:".equalsIgnoreCase(valueOf(cmbConyugeDestino))
+                    && !validateRequiredText(txtConyugeDestinoOtro, "Otro - Destino del cónyuge")) return false;
             if (!validateCombo(cmbConyugeEscalafon, "Escalafón del cónyuge")) return false;
             if (!validateCombo(cmbConyugeEspBasica, "Especialidad básica del cónyuge")) return false;
             if (!validateCombo(cmbConyugeEspAvanzada, "Especialidad avanzada del cónyuge")) return false;
@@ -1379,6 +1866,16 @@ fillComboSafe(cmbConyugeDestino, destinos);
 
     private void showValidationMessage(String message) {
         JOptionPane.showMessageDialog(this, message, "Validación", JOptionPane.WARNING_MESSAGE);
+    }
+
+    private String valueOrOtro(JComboBox<String> combo, JTextField otroField) {
+        String valor = valueOf(combo);
+
+        if ("OTRO especificar:".equalsIgnoreCase(valor)) {
+            return otroField == null ? "" : otroField.getText().trim();
+        }
+
+        return valor;
     }
 
     private String buildConyugeEspecialidadString(String esc, String bas, String avz) {
@@ -1576,6 +2073,12 @@ fillComboSafe(cmbConyugeDestino, destinos);
         return field;
     }
 
+    private JTextField newEmailField(int columns) {
+        JTextField field = new JTextField(columns);
+        ((AbstractDocument) field.getDocument()).setDocumentFilter(new NoAtSignFilter());
+        return field;
+    }
+
     private static class NumericDocumentFilter extends DocumentFilter {
         @Override
         public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
@@ -1587,6 +2090,22 @@ fillComboSafe(cmbConyugeDestino, destinos);
         @Override
         public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
             if (text == null || text.matches("\\d*")) {
+                super.replace(fb, offset, length, text, attrs);
+            }
+        }
+    }
+
+    private static class NoAtSignFilter extends DocumentFilter {
+        @Override
+        public void insertString(FilterBypass fb, int offset, String string, AttributeSet attr) throws BadLocationException {
+            if (string != null && !string.contains("@")) {
+                super.insertString(fb, offset, string, attr);
+            }
+        }
+
+        @Override
+        public void replace(FilterBypass fb, int offset, int length, String text, AttributeSet attrs) throws BadLocationException {
+            if (text != null && !text.contains("@")) {
                 super.replace(fb, offset, length, text, attrs);
             }
         }
@@ -1633,7 +2152,16 @@ fillComboSafe(cmbConyugeDestino, destinos);
         host.add(field, c);
     }
 
+    private void configureButtonBase(JButton btn) {
+        btn.setFocusPainted(false);
+        btn.setBorderPainted(false);
+        btn.setContentAreaFilled(true);
+        btn.setOpaque(true);
+        btn.setRolloverEnabled(true);
+    }
+
     private void styleButtonPrimary(JButton b, Color color) {
+        configureButtonBase(b);
         b.setBackground(color);
         b.setForeground(Color.WHITE);
         b.setOpaque(true);
@@ -1642,6 +2170,7 @@ fillComboSafe(cmbConyugeDestino, destinos);
     }
 
     private void styleButtonSecondary(JButton b, Color color) {
+        configureButtonBase(b);
         b.setBackground(color);
         b.setForeground(Color.WHITE);
         b.setOpaque(true);
@@ -1650,6 +2179,7 @@ fillComboSafe(cmbConyugeDestino, destinos);
     }
 
     private void styleButtonOutline(JButton b, Color color) {
+        configureButtonBase(b);
         b.setBackground(Color.WHITE);
         b.setForeground(color);
         b.setOpaque(true);
