@@ -7,7 +7,9 @@ dgsam\App.class
 dgsam\ListProvider$1.class
 dgsam\ExcelAnalyzer.class
 dgsam\FichaDatosPersonalesFrame$3.class
+dgsam\FichaDatosPersonalesFrame$CampanaAntarticaRow.class
 dgsam\FichaDatosPersonalesFrame$ComisionExteriorRow.class
+dgsam\FichaDatosPersonalesFrame$5.class
 dgsam\FichaDatosPersonalesFrame$EspecialidadesData.class
 dgsam\FichaDatosPersonalesFrame$FichaModel.class
 dgsam\FichaDatosPersonalesFrame$NumericDocumentFilter.class
