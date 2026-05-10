@@ -462,13 +462,13 @@ txtDestino2Otro.setEnabled(false);
 
         // ===== TOP (3 columnas) =====
         int rL = 0;
-        addField(colL, rL++, "IOSFA", txtIOSFA);
-        addField(colL, rL++, "DNI", txtDNI);
-        addField(colL, rL++, "Fecha de ingreso", spFechaIngreso);
+        addField(colL, rL++, "IOSFA *", txtIOSFA);
+        addField(colL, rL++, "DNI *", txtDNI);
+        addField(colL, rL++, "Fecha de ingreso *", spFechaIngreso);
         addField(colL, rL++, "Años en el grado", txtAniosEnGrado);
         addField(colL, rL++, "Años en la especialidad", txtAniosEnEspecialidad);
-        addField(colL, rL++, "¿Se desempeña en la especialidad actualmente?", cmbSeDesempena);
-        addField(colL, rL++, "¿Cumple turno o servicio?", cmbCumpleTurno);
+        addField(colL, rL++, "¿Se desempeña en la especialidad actualmente? *", cmbSeDesempena);
+        addField(colL, rL++, "¿Cumple turno o servicio? *", cmbCumpleTurno);
 
         cmbCumpleTurno.addActionListener(e -> {
             boolean cumpleTurno = "Sí".equalsIgnoreCase(valueOf(cmbCumpleTurno));
@@ -480,11 +480,11 @@ txtDestino2Otro.setEnabled(false);
             }
         });
 
-        addField(colL, rL++, "Grado", cmbGrado);
-        addField(colL, rL++, "Apellido", txtApellido);
-        addField(colL, rL++, "Nombres", txtNombres);
-        addField(colL, rL++, "Lugar de nacimiento", txtLugarNac);
-        addField(colL, rL++, "Fecha de nacimiento", spFechaNacimiento);
+        addField(colL, rL++, "Grado *", cmbGrado);
+        addField(colL, rL++, "Apellido *", txtApellido);
+        addField(colL, rL++, "Nombres *", txtNombres);
+        addField(colL, rL++, "Lugar de nacimiento *", txtLugarNac);
+        addField(colL, rL++, "Fecha de nacimiento *", spFechaNacimiento);
 
         int rC = 0;
         addField(colC, rC++, "Escalafón", cmbEscalafon);
@@ -495,20 +495,20 @@ txtDestino2Otro.setEnabled(false);
         addField(colC, rC++, "Aptitud psicofísica - fecha último examen", spAptitudPsicofisicaFecha);
         addField(colC, rC++, "Fecha última condición de tiro", spFechaCondicionTiro);
         addField(colC, rC++, "¿Posee apto físico s/mapi 5?", cmbPoseeAptoFisico);
-        addField(colC, rC++, "CUIL", txtCUIL);
-        addField(colC, rC++, "CBU", txtCBU);
-        addField(colC, rC++, "Email (sin @faa.mil.ar)", txtEmailInst);
-        addField(colC, rC++, "Celular", txtCelular);
+        addField(colC, rC++, "CUIL *", txtCUIL);
+        addField(colC, rC++, "CBU *", txtCBU);
+        addField(colC, rC++, "Email (sin @faa.mil.ar) *", txtEmailInst);
+        addField(colC, rC++, "Celular *", txtCelular);
 
         int rRTop = 0;
-        addField(colRTop, rRTop++, "Usuario GDE", txtUsuarioGDE);
-        addField(colRTop, rRTop++, "RTI", txtRTI);
+        addField(colRTop, rRTop++, "Usuario GDE *", txtUsuarioGDE);
+        addField(colRTop, rRTop++, "RTI *", txtRTI);
         addField(colRTop, rRTop++, "Factor sanguíneo", cmbFactorSanguineo);
         addField(colRTop, rRTop++, "Unidad de revista", cmbUnidadRevista);
 addField(colRTop, rRTop++, "Otro - Unidad de revista", txtUnidadRevistaOtro);
 
-        addField(colRTop, rRTop++, "Destino interno", txtDestinoInterno);
-        addField(colRTop, rRTop++, "Cargo", txtCargo);
+        addField(colRTop, rRTop++, "Destino interno *", txtDestinoInterno);
+        addField(colRTop, rRTop++, "Cargo *", txtCargo);
         addField(colRTop, rRTop++, "Destino anterior", cmbDestinoAnterior);
         
 addField(colRTop, rRTop++, "Otro - Destino anterior", txtDestinoAnteriorOtro);
@@ -984,13 +984,13 @@ addField(colRTop, rRTop++, "Otro - Destino anterior", txtDestinoAnteriorOtro);
         cmbProvincia = newCombo();
 
         int rL = 0;
-        addField(colL, rL++, "Domicilio - Calle", txtDomicilioCalle);
-        addField(colL, rL++, "Domicilio - Número - Piso - Dpto", txtNumeroCalle);
-        addField(colL, rL++, "Localidad", txtLocalidad);
-        addField(colL, rL++, "Código postal", txtCP);
+        addField(colL, rL++, "Domicilio - Calle *", txtDomicilioCalle);
+        addField(colL, rL++, "Domicilio - Número - Piso - Dpto *", txtNumeroCalle);
+        addField(colL, rL++, "Localidad *", txtLocalidad);
+        addField(colL, rL++, "Código postal *", txtCP);
 
         int rR = 0;
-        addField(colR, rR++, "Provincia", cmbProvincia);
+        addField(colR, rR++, "Provincia *", cmbProvincia);
 
         GridBagConstraints c = new GridBagConstraints();
         c.gridx = 0; c.gridy = 0;
